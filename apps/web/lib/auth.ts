@@ -26,17 +26,38 @@ export const MOCK_USERS: (SessionUser & { password: string })[] = [
 ]
 
 const SESSION_KEY = "monitor_g5_session"
+const PASSWORD_OVERRIDE_KEY = "monitor_g5_password_overrides"
 
 export type LoginResult =
   | { ok: true; session: Session }
   | { ok: false; error: "user-not-found" | "wrong-password" }
+
+// Password changes are stored as per-user overrides in localStorage so the
+// mock login flow stays refresh-proof without mutating MOCK_USERS.
+function getPasswordOverride(username: string): string | null {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = localStorage.getItem(PASSWORD_OVERRIDE_KEY)
+    if (!raw) return null
+    const map = JSON.parse(raw) as Record<string, string>
+    return map[username] ?? null
+  } catch {
+    return null
+  }
+}
+
+function effectivePassword(user: (typeof MOCK_USERS)[number]): string {
+  return getPasswordOverride(user.username) ?? user.password
+}
 
 export function login(username: string, password: string): LoginResult {
   const user = MOCK_USERS.find(
     (u) => u.username.toLowerCase() === username.trim().toLowerCase()
   )
   if (!user) return { ok: false, error: "user-not-found" }
-  if (user.password !== password) return { ok: false, error: "wrong-password" }
+  if (effectivePassword(user) !== password) {
+    return { ok: false, error: "wrong-password" }
+  }
 
   const session: Session = {
     user: {
@@ -48,6 +69,35 @@ export function login(username: string, password: string): LoginResult {
   }
   localStorage.setItem(SESSION_KEY, JSON.stringify(session))
   return { ok: true, session }
+}
+
+export type ChangePasswordResult =
+  | { ok: true }
+  | { ok: false; error: "not-logged-in" | "user-not-found" | "wrong-current-password" }
+
+export function changePassword(
+  currentPassword: string,
+  newPassword: string
+): ChangePasswordResult {
+  if (typeof window === "undefined") return { ok: false, error: "not-logged-in" }
+  const session = getSession()
+  if (!session) return { ok: false, error: "not-logged-in" }
+  const user = MOCK_USERS.find((u) => u.username === session.user.username)
+  if (!user) return { ok: false, error: "user-not-found" }
+  if (effectivePassword(user) !== currentPassword) {
+    return { ok: false, error: "wrong-current-password" }
+  }
+
+  const map: Record<string, string> = {}
+  try {
+    const raw = localStorage.getItem(PASSWORD_OVERRIDE_KEY)
+    if (raw) Object.assign(map, JSON.parse(raw))
+  } catch {
+    // start fresh
+  }
+  map[user.username] = newPassword
+  localStorage.setItem(PASSWORD_OVERRIDE_KEY, JSON.stringify(map))
+  return { ok: true }
 }
 
 export function getSession(): Session | null {

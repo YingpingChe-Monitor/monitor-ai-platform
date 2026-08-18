@@ -31,14 +31,29 @@
     "platform": "平台",
     "prototype": "示例",
     "dashboard": "仪表盘",
-    "cards": "组件卡片",
-    "billing": "计费"
+    "cards": "组件卡片"
   },
   "User": {
-    "upgradeToPro": "升级到 Pro",
     "account": "账户",
     "notifications": "通知",
     "logout": "退出登录",
     "language": "语言"
+  },
+  "Account": {
+    "title": "重置密码",
+    "description": "输入当前密码和新密码以更新账户密码",
+    "currentPassword": "当前密码",
+    "currentPasswordPlaceholder": "请输入当前密码",
+    "newPassword": "新密码",
+    "newPasswordPlaceholder": "请输入新密码（至少 6 位）",
+    "confirmPassword": "确认新密码",
+    "confirmPasswordPlaceholder": "请再次输入新密码",
+    "submit": "确认修改",
+    "submitting": "提交中…",
+    "errorRequired": "请填写所有字段",
+    "errorTooShort": "新密码至少 6 位",
+    "errorMismatch": "两次输入的新密码不一致",
+    "errorWrongCurrent": "当前密码不正确",
+    "success": "密码已更新，下次请使用新密码登录"
   }
 }

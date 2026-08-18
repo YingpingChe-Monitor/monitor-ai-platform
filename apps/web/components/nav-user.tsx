@@ -1,12 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import {
   ChevronsUpDownIcon,
-  SparklesIcon,
   BadgeCheckIcon,
-  CreditCardIcon,
   BellIcon,
   LogOutIcon,
   LanguagesIcon,
@@ -38,6 +37,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { ResetPasswordDialog } from "@/components/reset-password-dialog"
 import { logout, getSession } from "@/lib/auth"
 import { setLocaleCookie, type LocaleCode } from "@/app/actions/locale"
 import { useHoverCardOpen } from "@/hooks/use-hover-card-open"
@@ -54,6 +54,7 @@ export function NavUser() {
   const locale = useLocale()
   const { open, openCard, keepOpen, scheduleClose, closeCard } =
     useHoverCardOpen()
+  const [accountOpen, setAccountOpen] = useState(false)
 
   const session = getSession()
   const user = session?.user ?? {
@@ -111,23 +112,10 @@ export function NavUser() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <SparklesIcon
-                />
-                {t("User.upgradeToPro")}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setAccountOpen(true)}>
                 <BadgeCheckIcon
                 />
                 {t("User.account")}
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCardIcon
-                />
-                {t("Nav.billing")}
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <BellIcon
@@ -188,6 +176,7 @@ export function NavUser() {
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
+      <ResetPasswordDialog open={accountOpen} onOpenChange={setAccountOpen} />
     </SidebarMenu>
   )
 }

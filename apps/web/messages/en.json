@@ -31,14 +31,29 @@
     "platform": "Platform",
     "prototype": "Examples",
     "dashboard": "Dashboard",
-    "cards": "Cards",
-    "billing": "Billing"
+    "cards": "Cards"
   },
   "User": {
-    "upgradeToPro": "Upgrade to Pro",
     "account": "Account",
     "notifications": "Notifications",
     "logout": "Log out",
     "language": "Language"
+  },
+  "Account": {
+    "title": "Reset password",
+    "description": "Enter your current and new password to update your account",
+    "currentPassword": "Current password",
+    "currentPasswordPlaceholder": "Enter your current password",
+    "newPassword": "New password",
+    "newPasswordPlaceholder": "Enter a new password (min. 6 characters)",
+    "confirmPassword": "Confirm new password",
+    "confirmPasswordPlaceholder": "Re-enter your new password",
+    "submit": "Update password",
+    "submitting": "Submitting…",
+    "errorRequired": "Please fill in all fields",
+    "errorTooShort": "New password must be at least 6 characters",
+    "errorMismatch": "The two new passwords do not match",
+    "errorWrongCurrent": "Current password is incorrect",
+    "success": "Password updated. Use your new password next time you sign in"
   }
 }
