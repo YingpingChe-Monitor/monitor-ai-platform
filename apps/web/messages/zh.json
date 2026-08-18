@@ -55,5 +55,30 @@
     "errorMismatch": "两次输入的新密码不一致",
     "errorWrongCurrent": "当前密码不正确",
     "success": "密码已更新，下次请使用新密码登录"
+  },
+  "Notifications": {
+    "title": "通知",
+    "description": "查看和管理系统通知",
+    "searchPlaceholder": "搜索通知内容…",
+    "typeInfo": "信息",
+    "typeSuccess": "成功",
+    "typeWarning": "警告",
+    "typeError": "错误",
+    "markRead": "标记已读",
+    "delete": "删除",
+    "empty": "没有匹配的通知",
+    "selectedCount": "已选择 {count} 条",
+    "unread": "未读",
+    "columnType": "类型",
+    "columnContent": "内容",
+    "columnTime": "时间",
+    "items": {
+      "maintenance": { "title": "系统维护提醒", "content": "系统将于今晚 23:00-23:30 进行例行维护", "time": "10 分钟前" },
+      "passwordChanged": { "title": "密码修改成功", "content": "您的账户密码已成功更新", "time": "1 小时前" },
+      "diskSpace": { "title": "磁盘空间不足", "content": "服务器磁盘使用率已超过 85%，请及时清理", "time": "3 小时前" },
+      "connectionLost": { "title": "连接失败", "content": "与产线设备的连接中断，正在重试", "time": "昨天" },
+      "release": { "title": "新版本发布", "content": "Monitor G5 平台 v2.1.0 已发布，查看更新日志", "time": "2 天前" },
+      "backup": { "title": "备份完成", "content": "数据库每日备份已完成", "time": "3 天前" }
+    }
   }
 }

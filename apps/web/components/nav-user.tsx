@@ -38,6 +38,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { ResetPasswordDialog } from "@/components/reset-password-dialog"
+import {
+  NotificationsDialog,
+  NOTIFICATION_IDS,
+  INITIAL_READ_IDS,
+} from "@/components/notifications-dialog"
+import { Badge } from "@/components/ui/badge"
 import { logout, getSession } from "@/lib/auth"
 import { setLocaleCookie, type LocaleCode } from "@/app/actions/locale"
 import { useHoverCardOpen } from "@/hooks/use-hover-card-open"
@@ -55,6 +61,16 @@ export function NavUser() {
   const { open, openCard, keepOpen, scheduleClose, closeCard } =
     useHoverCardOpen()
   const [accountOpen, setAccountOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [readIds, setReadIds] = useState<Set<string>>(
+    () => new Set(INITIAL_READ_IDS)
+  )
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+
+  // Unread count drives the red badge on the Notifications menu item.
+  const unreadCount = NOTIFICATION_IDS.filter(
+    (id) => !deletedIds.has(id) && !readIds.has(id)
+  ).length
 
   const session = getSession()
   const user = session?.user ?? {
@@ -117,10 +133,15 @@ export function NavUser() {
                 />
                 {t("User.account")}
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setNotificationsOpen(true)}>
                 <BellIcon
                 />
                 {t("User.notifications")}
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="ml-auto">
+                    {unreadCount}
+                  </Badge>
+                )}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -177,6 +198,18 @@ export function NavUser() {
         </DropdownMenu>
       </SidebarMenuItem>
       <ResetPasswordDialog open={accountOpen} onOpenChange={setAccountOpen} />
+      <NotificationsDialog
+        open={notificationsOpen}
+        onOpenChange={setNotificationsOpen}
+        readIds={readIds}
+        deletedIds={deletedIds}
+        onMarkRead={(id) =>
+          setReadIds((prev) => new Set(prev).add(id))
+        }
+        onDelete={(id) =>
+          setDeletedIds((prev) => new Set(prev).add(id))
+        }
+      />
     </SidebarMenu>
   )
 }

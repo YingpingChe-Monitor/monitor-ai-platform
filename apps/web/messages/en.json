@@ -55,5 +55,30 @@
     "errorMismatch": "The two new passwords do not match",
     "errorWrongCurrent": "Current password is incorrect",
     "success": "Password updated. Use your new password next time you sign in"
+  },
+  "Notifications": {
+    "title": "Notifications",
+    "description": "View and manage system notifications",
+    "searchPlaceholder": "Search notifications…",
+    "typeInfo": "Info",
+    "typeSuccess": "Success",
+    "typeWarning": "Warning",
+    "typeError": "Error",
+    "markRead": "Mark as read",
+    "delete": "Delete",
+    "empty": "No matching notifications",
+    "selectedCount": "{count} selected",
+    "unread": "Unread",
+    "columnType": "Type",
+    "columnContent": "Content",
+    "columnTime": "Time",
+    "items": {
+      "maintenance": { "title": "System maintenance", "content": "Scheduled maintenance tonight 23:00–23:30", "time": "10 min ago" },
+      "passwordChanged": { "title": "Password changed", "content": "Your account password was updated successfully", "time": "1 hour ago" },
+      "diskSpace": { "title": "Low disk space", "content": "Server disk usage is above 85%, please clean up", "time": "3 hours ago" },
+      "connectionLost": { "title": "Connection lost", "content": "Connection to the production line device was interrupted, retrying", "time": "yesterday" },
+      "release": { "title": "New release", "content": "Monitor G5 Platform v2.1.0 is out — check the changelog", "time": "2 days ago" },
+      "backup": { "title": "Backup complete", "content": "Daily database backup finished", "time": "3 days ago" }
+    }
   }
 }
