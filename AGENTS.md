@@ -11,3 +11,9 @@ Five canonical roles mapped to default labels: `needs-triage`, `needs-info`, `re
 ### Domain docs
 
 Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+### Branch strategy
+
+`main` is active development (content + template changes); `template` holds
+only the reusable template baseline, synced via cherry-pick. See
+`docs/agents/branch-strategy.md`.
