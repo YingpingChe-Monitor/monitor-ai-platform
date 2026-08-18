@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import {
@@ -25,18 +26,23 @@ import { ChevronRightIcon, TerminalSquareIcon } from "lucide-react"
 // Only the Prototype group is shown: the other shadcn sample groups
 // (Models, Documentation, Settings) have no real pages yet and were removed;
 // projects list was removed too. Add entries back via the dictionary + nav-main.
+//
+// Active state is derived from the current pathname (usePathname): the
+// sub-item whose url matches the route is highlighted, and the top-level
+// group lights up when any of its sub-items is active — zero config for new
+// menu entries.
 export function NavMain() {
   // Close the mobile sheet on navigation (client-side nav doesn't reload the
   // page, so the sheet would otherwise stay open).
   const { setOpenMobile } = useSidebar()
   const t = useTranslations("Nav")
+  const pathname = usePathname()
 
   const items = [
     {
       title: t("prototype"),
       url: "#",
       icon: <TerminalSquareIcon />,
-      isActive: true,
       items: [
         { title: t("dashboard"), url: "/" },
         { title: t("cards"), url: "/prototype/cards" },
@@ -48,40 +54,51 @@ export function NavMain() {
     <SidebarGroup>
       <SidebarGroupLabel>{t("platform")}</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
-          <Collapsible
-            key={item.title}
-            defaultOpen={item.isActive}
-            className="group/collapsible"
-            render={<SidebarMenuItem />}
-          >
-            <CollapsibleTrigger
-              render={<SidebarMenuButton tooltip={item.title} />}
+        {items.map((item) => {
+          const groupActive = item.items?.some(
+            (subItem) => subItem.url !== "#" && pathname === subItem.url
+          )
+          return (
+            <Collapsible
+              key={item.title}
+              defaultOpen
+              className="group/collapsible"
+              render={<SidebarMenuItem />}
             >
-              {item.icon}
-              <span>{item.title}</span>
-              <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarMenuSub>
-                {item.items?.map((subItem) => (
-                  <SidebarMenuSubItem key={subItem.title}>
-                    <SidebarMenuSubButton
-                      render={
-                        <Link
-                          href={subItem.url}
-                          onClick={() => setOpenMobile(false)}
-                        />
-                      }
-                    >
-                      <span>{subItem.title}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                ))}
-              </SidebarMenuSub>
-            </CollapsibleContent>
-          </Collapsible>
-        ))}
+              <CollapsibleTrigger
+                render={
+                  <SidebarMenuButton
+                    tooltip={item.title}
+                    isActive={groupActive}
+                  />
+                }
+              >
+                {item.icon}
+                <span>{item.title}</span>
+                <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {item.items?.map((subItem) => (
+                    <SidebarMenuSubItem key={subItem.title}>
+                      <SidebarMenuSubButton
+                        isActive={pathname === subItem.url}
+                        render={
+                          <Link
+                            href={subItem.url}
+                            onClick={() => setOpenMobile(false)}
+                          />
+                        }
+                      >
+                        <span>{subItem.title}</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </Collapsible>
+          )
+        })}
       </SidebarMenu>
     </SidebarGroup>
   )
