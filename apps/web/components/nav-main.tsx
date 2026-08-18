@@ -19,9 +19,12 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronRightIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon } from "lucide-react"
+import { ChevronRightIcon, TerminalSquareIcon } from "lucide-react"
 
 // Menu structure is built from the i18n dictionary — template-ready.
+// Only the Prototype group is shown: the other shadcn sample groups
+// (Models, Documentation, Settings) have no real pages yet and were removed;
+// projects list was removed too. Add entries back via the dictionary + nav-main.
 export function NavMain() {
   // Close the mobile sheet on navigation (client-side nav doesn't reload the
   // page, so the sheet would otherwise stay open).
@@ -37,38 +40,6 @@ export function NavMain() {
       items: [
         { title: t("dashboard"), url: "/" },
         { title: t("cards"), url: "/prototype/cards" },
-      ],
-    },
-    {
-      title: t("models"),
-      url: "#",
-      icon: <BotIcon />,
-      items: [
-        { title: t("genesis"), url: "#" },
-        { title: t("explorer"), url: "#" },
-        { title: t("quantum"), url: "#" },
-      ],
-    },
-    {
-      title: t("documentation"),
-      url: "#",
-      icon: <BookOpenIcon />,
-      items: [
-        { title: t("introduction"), url: "#" },
-        { title: t("getStarted"), url: "#" },
-        { title: t("tutorials"), url: "#" },
-        { title: t("changelog"), url: "#" },
-      ],
-    },
-    {
-      title: t("settings"),
-      url: "#",
-      icon: <Settings2Icon />,
-      items: [
-        { title: t("general"), url: "#" },
-        { title: t("team"), url: "#" },
-        { title: t("billing"), url: "#" },
-        { title: t("limits"), url: "#" },
       ],
     },
   ]

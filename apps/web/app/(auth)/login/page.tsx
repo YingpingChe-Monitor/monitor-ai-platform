@@ -7,8 +7,7 @@ import { LoginForm } from "@/components/login-form"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("Login")
-  return { title: t("title") }
+  return { title: "Monitor G5 Adaptation Platform" }
 }
 
 export default async function LoginPage() {

@@ -20,8 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Monitor G5",
-  description: "Monitor G5 monitoring platform",
+  title: "Monitor G5 Adaptation Platform",
+  description: "Monitor G5 Adaptation Platform",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
