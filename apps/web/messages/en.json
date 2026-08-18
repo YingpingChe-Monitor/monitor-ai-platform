@@ -1,0 +1,65 @@
+{
+  "Brand": {
+    "name": "Monitor G5",
+    "goToDashboard": "go to dashboard",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar"
+  },
+  "Login": {
+    "title": "Monitor G5 Platform",
+    "subtitle": "Sign in to continue",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "demoHint": "Demo account: admin / 123456",
+    "errorUserNotFound": "User not found",
+    "errorWrongPassword": "Incorrect password",
+    "errorRequired": "Please enter your username and password",
+    "success": "Signed in successfully. Welcome back.",
+    "footer": "© 2026 Monitor G5. All rights reserved."
+  },
+  "Common": {
+    "language": "Language",
+    "chinese": "中文",
+    "english": "English",
+    "theme": "Toggle theme"
+  },
+  "Nav": {
+    "platform": "Platform",
+    "prototype": "Prototype",
+    "dashboard": "Dashboard",
+    "cards": "Cards",
+    "models": "Models",
+    "genesis": "Genesis",
+    "explorer": "Explorer",
+    "quantum": "Quantum",
+    "documentation": "Documentation",
+    "introduction": "Introduction",
+    "getStarted": "Get Started",
+    "tutorials": "Tutorials",
+    "changelog": "Changelog",
+    "settings": "Settings",
+    "general": "General",
+    "team": "Team",
+    "billing": "Billing",
+    "limits": "Limits",
+    "projects": "Projects",
+    "designEngineering": "Design Engineering",
+    "salesMarketing": "Sales & Marketing",
+    "travel": "Travel",
+    "viewProject": "View Project",
+    "shareProject": "Share Project",
+    "deleteProject": "Delete Project",
+    "more": "More"
+  },
+  "User": {
+    "upgradeToPro": "Upgrade to Pro",
+    "account": "Account",
+    "notifications": "Notifications",
+    "logout": "Log out",
+    "language": "Language"
+  }
+}

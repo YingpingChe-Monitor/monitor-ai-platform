@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 import {
   Collapsible,
@@ -18,28 +19,63 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronRightIcon } from "lucide-react"
+import { ChevronRightIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon } from "lucide-react"
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon?: React.ReactNode
-    isActive?: boolean
-    items?: {
-      title: string
-      url: string
-    }[]
-  }[]
-}) {
+// Menu structure is built from the i18n dictionary — template-ready.
+export function NavMain() {
   // Close the mobile sheet on navigation (client-side nav doesn't reload the
   // page, so the sheet would otherwise stay open).
   const { setOpenMobile } = useSidebar()
+  const t = useTranslations("Nav")
+
+  const items = [
+    {
+      title: t("prototype"),
+      url: "#",
+      icon: <TerminalSquareIcon />,
+      isActive: true,
+      items: [
+        { title: t("dashboard"), url: "/" },
+        { title: t("cards"), url: "/prototype/cards" },
+      ],
+    },
+    {
+      title: t("models"),
+      url: "#",
+      icon: <BotIcon />,
+      items: [
+        { title: t("genesis"), url: "#" },
+        { title: t("explorer"), url: "#" },
+        { title: t("quantum"), url: "#" },
+      ],
+    },
+    {
+      title: t("documentation"),
+      url: "#",
+      icon: <BookOpenIcon />,
+      items: [
+        { title: t("introduction"), url: "#" },
+        { title: t("getStarted"), url: "#" },
+        { title: t("tutorials"), url: "#" },
+        { title: t("changelog"), url: "#" },
+      ],
+    },
+    {
+      title: t("settings"),
+      url: "#",
+      icon: <Settings2Icon />,
+      items: [
+        { title: t("general"), url: "#" },
+        { title: t("team"), url: "#" },
+        { title: t("billing"), url: "#" },
+        { title: t("limits"), url: "#" },
+      ],
+    },
+  ]
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("platform")}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible

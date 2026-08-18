@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -14,12 +15,13 @@ import {
 // Sidebar brand header — validated design (prototype verdict):
 // - bar look: border-b border-sidebar-border
 // - h-14 header, matched h-14 page bar in app-shell
-// - logo-sm + "Monitor ERP" wordmark in brand blue (--brand / text-brand), links to "/"
+// - logo-sm + brand wordmark (--brand / text-brand, from i18n), links to "/"
 // - toggle inside the header (PanelLeftCloseIcon); collapsed: logo swaps to
 //   PanelLeftOpenIcon on hover. No badge, no team switcher.
 
 export function BrandHeader() {
   const { state, isMobile, toggleSidebar, setOpenMobile } = useSidebar()
+  const t = useTranslations("Brand")
   // On mobile the sidebar is a full-width sheet; the desktop collapsed state
   // doesn't apply there, so always show the expanded header (its toggle closes
   // the sheet, per design decision Q4).
@@ -33,7 +35,7 @@ export function BrandHeader() {
             render={
               <button
                 type="button"
-                aria-label="Expand sidebar"
+                aria-label={t("expandSidebar")}
                 onClick={toggleSidebar}
                 className="group relative flex size-8 items-center justify-center rounded-md transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               />
@@ -41,12 +43,12 @@ export function BrandHeader() {
           >
             <img
               src="/logo-sm.png"
-              alt="Monitor ERP"
+              alt={t("name")}
               className="size-6 transition-opacity duration-200 group-hover:opacity-0"
             />
             <PanelLeftOpenIcon className="absolute size-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
           </TooltipTrigger>
-          <TooltipContent side="right">Expand sidebar</TooltipContent>
+          <TooltipContent side="right">{t("expandSidebar")}</TooltipContent>
         </Tooltip>
       </SidebarHeader>
     )
@@ -56,13 +58,13 @@ export function BrandHeader() {
     <SidebarHeader className="flex h-14 flex-row items-center gap-2 border-b border-sidebar-border">
       <Link
         href="/"
-        aria-label="Monitor ERP — go to dashboard"
+        aria-label={`${t("name")} — ${t("goToDashboard")}`}
         onClick={() => setOpenMobile(false)}
         className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-1 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
       >
         <img src="/logo-sm.png" alt="" className="size-6 shrink-0" />
         <span className="truncate text-sm font-semibold text-brand">
-          Monitor ERP
+          {t("name")}
         </span>
       </Link>
       <div className="ml-auto">
@@ -72,14 +74,14 @@ export function BrandHeader() {
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label="Collapse sidebar"
+                aria-label={t("collapseSidebar")}
                 onClick={toggleSidebar}
               />
             }
           >
             <PanelLeftCloseIcon />
           </TooltipTrigger>
-          <TooltipContent side="bottom">Collapse sidebar</TooltipContent>
+          <TooltipContent side="bottom">{t("collapseSidebar")}</TooltipContent>
         </Tooltip>
       </div>
     </SidebarHeader>

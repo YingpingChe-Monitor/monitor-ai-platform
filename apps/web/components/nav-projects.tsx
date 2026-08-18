@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 import {
   DropdownMenu,
@@ -18,23 +19,24 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { MoreHorizontalIcon, FolderIcon, ArrowRightIcon, Trash2Icon } from "lucide-react"
+import { MoreHorizontalIcon, FolderIcon, ArrowRightIcon, Trash2Icon, FrameIcon, PieChartIcon, MapIcon } from "lucide-react"
 
-export function NavProjects({
-  projects,
-}: {
-  projects: {
-    name: string
-    url: string
-    icon: React.ReactNode
-  }[]
-}) {
+// Project list is dictionary-driven (template-ready).
+export function NavProjects() {
   // setOpenMobile: close the mobile sheet on navigation (client-side nav
   // doesn't reload the page, so the sheet would otherwise stay open).
   const { isMobile, setOpenMobile } = useSidebar()
+  const t = useTranslations("Nav")
+
+  const projects = [
+    { name: t("designEngineering"), url: "#", icon: <FrameIcon /> },
+    { name: t("salesMarketing"), url: "#", icon: <PieChartIcon /> },
+    { name: t("travel"), url: "#", icon: <MapIcon /> },
+  ]
+
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("projects")}</SidebarGroupLabel>
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
@@ -60,7 +62,7 @@ export function NavProjects({
               >
                 <MoreHorizontalIcon
                 />
-                <span className="sr-only">More</span>
+                <span className="sr-only">{t("more")}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-fit"
@@ -70,18 +72,18 @@ export function NavProjects({
                 <DropdownMenuItem>
                   <FolderIcon
                   />
-                  <span>View Project</span>
+                  <span>{t("viewProject")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <ArrowRightIcon
                   />
-                  <span>Share Project</span>
+                  <span>{t("shareProject")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive">
                   <Trash2Icon
                   />
-                  <span>Delete Project</span>
+                  <span>{t("deleteProject")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -90,7 +92,7 @@ export function NavProjects({
         <SidebarMenuItem>
           <SidebarMenuButton className="text-sidebar-foreground/70">
             <MoreHorizontalIcon className="text-sidebar-foreground/70" />
-            <span>More</span>
+            <span>{t("more")}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
