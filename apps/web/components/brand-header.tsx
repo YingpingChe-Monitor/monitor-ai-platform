@@ -64,11 +64,12 @@ export function BrandHeader() {
         onClick={() => setOpenMobile(false)}
         className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-1 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
       >
-        {/* Horizontal logo lockup (contains the wordmark). */}
+        {/* Horizontal logo lockup (contains the wordmark), 1.2× of the
+            original h-6 (24px → 28.8px). */}
         <img
           src="/logo.png"
           alt=""
-          className="h-6 w-auto max-w-40 shrink-0 object-contain"
+          className="h-[1.8rem] w-auto max-w-48 shrink-0 object-contain"
           width={256}
           height={74}
         />
