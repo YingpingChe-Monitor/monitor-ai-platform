@@ -15,9 +15,9 @@ import {
 // Sidebar brand header — validated design (prototype verdict):
 // - bar look: border-b border-sidebar-border
 // - h-14 header, matched h-14 page bar in app-shell
-// - horizontal logo lockup (logo.png, includes the wordmark) links to "/"
-// - toggle inside the header (PanelLeftCloseIcon); collapsed: circular mark
-//   (logo-sm.png) swaps to PanelLeftOpenIcon on hover. No badge, no team switcher.
+// - circular M mark (logo-sm.png) + wordmark text (from i18n), links to "/"
+// - toggle inside the header (PanelLeftCloseIcon); collapsed: mark swaps to
+//   PanelLeftOpenIcon on hover. No badge, no team switcher.
 
 export function BrandHeader() {
   const { state, isMobile, toggleSidebar, setOpenMobile } = useSidebar()
@@ -64,15 +64,11 @@ export function BrandHeader() {
         onClick={() => setOpenMobile(false)}
         className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-1 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
       >
-        {/* Horizontal logo lockup (contains the wordmark), 1.2× of the
-            original h-6 (24px → 28.8px). */}
-        <img
-          src="/logo.png"
-          alt=""
-          className="h-[1.8rem] w-auto max-w-48 shrink-0 object-contain"
-          width={256}
-          height={74}
-        />
+        {/* Circular M mark + wordmark text. */}
+        <img src="/logo-sm.png" alt="" className="size-6 shrink-0" />
+        <span className="truncate text-sm font-semibold text-brand">
+          {t("name")}
+        </span>
       </Link>
       <div className="ml-auto">
         <Tooltip>
