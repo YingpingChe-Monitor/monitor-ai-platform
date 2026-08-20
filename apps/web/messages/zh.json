@@ -31,7 +31,28 @@
     "platform": "平台",
     "prototype": "示例",
     "dashboard": "仪表盘",
-    "cards": "组件卡片"
+    "cards": "组件卡片",
+    "components": "组件",
+    "imagePreview": "图片预览"
+  },
+  "ImagePreview": {
+    "title": "图片预览",
+    "description": "点击缩略图打开 Lightbox 查看大图，支持前后切换与键盘操作",
+    "open": "查看大图",
+    "previous": "上一张",
+    "next": "下一张",
+    "close": "关闭",
+    "loadingFailed": "图片加载失败",
+    "modeLabel": "实现方式",
+    "modeDialog": "Dialog Lightbox",
+    "mode7ovr": "7ovr Gallery",
+    "modeCambio": "cambio-image",
+    "modeZoom": "image-zoom",
+    "dialogDescription": "自建 Dialog + img 实现的 Lightbox：点击缩略图弹出大图，支持前后切换、索引与键盘操作",
+    "galleryDescription": "@7ovr/gallery-1 社区 block：标签过滤网格，悬停显示信息覆盖层，点击弹出 Dialog 大图",
+    "cambioDescription": "@delta/cambio-image：单图点击缩放，IntersectionObserver 懒加载，弹出层带动画与关闭按钮",
+    "zoomDescription": "@kibo-ui/image-zoom：包装 react-medium-image-zoom，点击原图位置缩放放大，平滑过渡",
+    "zoomHint": "点击图片试试缩放效果"
   },
   "User": {
     "account": "账户",

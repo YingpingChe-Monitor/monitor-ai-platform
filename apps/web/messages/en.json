@@ -31,7 +31,28 @@
     "platform": "Platform",
     "prototype": "Examples",
     "dashboard": "Dashboard",
-    "cards": "Cards"
+    "cards": "Cards",
+    "components": "Components",
+    "imagePreview": "Image Preview"
+  },
+  "ImagePreview": {
+    "title": "Image Preview",
+    "description": "Click a thumbnail to open the lightbox; navigate with the arrow buttons or keyboard",
+    "open": "View full image",
+    "previous": "Previous",
+    "next": "Next",
+    "close": "Close",
+    "loadingFailed": "Failed to load image",
+    "modeLabel": "Implementation",
+    "modeDialog": "Dialog Lightbox",
+    "mode7ovr": "7ovr Gallery",
+    "modeCambio": "cambio-image",
+    "modeZoom": "image-zoom",
+    "dialogDescription": "Self-built Dialog + img lightbox: click a thumbnail to open the full image, with prev/next, index and keyboard support",
+    "galleryDescription": "@7ovr/gallery-1 community block: tag-filtered grid with hover info overlay and Dialog lightbox",
+    "cambioDescription": "@delta/cambio-image: click-to-zoom single image with IntersectionObserver lazy reveal and animated popup",
+    "zoomDescription": "@kibo-ui/image-zoom: wraps react-medium-image-zoom for smooth in-place zoom",
+    "zoomHint": "Click the image to try the zoom"
   },
   "User": {
     "account": "Account",
