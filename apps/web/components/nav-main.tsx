@@ -50,6 +50,7 @@ export function NavMain() {
       icon: <BlocksIcon />,
       items: [
         { title: t("imagePreview"), url: "/components/image-preview" },
+        { title: t("pdfPreview"), url: "/components/pdf-preview" },
       ],
     },
   ]
