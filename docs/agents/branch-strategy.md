@@ -13,6 +13,18 @@ Two long-lived branches:
 shell, user menu with reset-password + notifications, sidebar active state,
 theme/i18n infrastructure).
 
+## Remotes — only touch OUR repo
+
+- `origin` = **YingpingChe-Monitor/monitor-ai-platform** (ours — the ONLY repo
+  we push to / open PRs in / modify).
+- `upstream` = **Changyi-Li/ui-prototype** (theirs — READ-ONLY reference;
+  `git fetch upstream` to compare is fine, but never push, never open PRs,
+  never modify).
+- `gh` may resolve the current repo to `upstream` when both remotes exist —
+  ALWAYS pass `--repo YingpingChe-Monitor/monitor-ai-platform` to every
+  `gh pr` / `gh repo` command.
+- If unsure which repo a command would touch, check first.
+
 ## What belongs where
 
 | Kind of change | Branch |

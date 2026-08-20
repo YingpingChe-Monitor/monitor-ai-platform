@@ -17,3 +17,12 @@ Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/ag
 `main` is active development (content + template changes); `template` holds
 only the reusable template baseline, synced via cherry-pick. See
 `docs/agents/branch-strategy.md`.
+
+### Remotes — only touch OUR repo
+
+`origin` (YingpingChe-Monitor/monitor-ai-platform) is ours — the only repo to
+push to, open PRs in, or modify. `upstream` (Changyi-Li/ui-prototype) is a
+read-only reference — fetch for comparison only, never push or open PRs
+against it. Always pass `--repo YingpingChe-Monitor/monitor-ai-platform` to
+`gh pr` / `gh repo` commands; `gh` may otherwise resolve to `upstream`.
+See `docs/agents/branch-strategy.md`.
