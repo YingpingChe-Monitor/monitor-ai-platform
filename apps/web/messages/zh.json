@@ -33,7 +33,26 @@
     "dashboard": "仪表盘",
     "cards": "组件卡片",
     "components": "控件仓库",
-    "imagePreview": "图片预览"
+    "imagePreview": "图片预览",
+    "pdfPreview": "PDF 预览"
+  },
+  "PdfPreview": {
+    "title": "PDF 预览",
+    "description": "三种 PDF 预览实现方式对比：react-pdf 渲染、iframe 嵌入、pdf.js 直接渲染",
+    "modeLabel": "实现方式",
+    "modeReactPdf": "react-pdf",
+    "modeEmbed": "iframe 嵌入",
+    "modePdfjs": "pdf.js 直渲染",
+    "reactPdfDescription": "react-pdf@10：Document + Page 组件渲染，支持分页、缩放，样式用 shadcn 组件搭建",
+    "embedDescription": "iframe 嵌入浏览器原生 PDF 查看器，零依赖，但 iOS Safari 只显示第一页",
+    "pdfjsDescription": "pdfjs-dist 直接渲染到 canvas，底层引擎，完全自定义控制",
+    "page": "第 {current} 页 / 共 {total} 页",
+    "prevPage": "上一页",
+    "nextPage": "下一页",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "loading": "加载中…",
+    "loadFailed": "PDF 加载失败"
   },
   "ImagePreview": {
     "title": "图片预览",

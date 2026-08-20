@@ -33,7 +33,26 @@
     "dashboard": "Dashboard",
     "cards": "Cards",
     "components": "Components",
-    "imagePreview": "Image Preview"
+    "imagePreview": "Image Preview",
+    "pdfPreview": "PDF Preview"
+  },
+  "PdfPreview": {
+    "title": "PDF Preview",
+    "description": "Compare three PDF preview implementations: react-pdf, iframe embed, and raw pdf.js",
+    "modeLabel": "Implementation",
+    "modeReactPdf": "react-pdf",
+    "modeEmbed": "iframe embed",
+    "modePdfjs": "pdf.js raw",
+    "reactPdfDescription": "react-pdf@10: Document + Page components with paging and zoom, toolbar built from shadcn primitives",
+    "embedDescription": "iframe embeds the browser's native PDF viewer — zero deps, but iOS Safari renders only page 1",
+    "pdfjsDescription": "pdfjs-dist renders directly to canvas: the raw engine with full control",
+    "page": "Page {current} of {total}",
+    "prevPage": "Previous page",
+    "nextPage": "Next page",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "loading": "Loading…",
+    "loadFailed": "Failed to load PDF"
   },
   "ImagePreview": {
     "title": "Image Preview",
