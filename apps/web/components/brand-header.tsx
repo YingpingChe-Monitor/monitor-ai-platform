@@ -15,9 +15,10 @@ import {
 // Sidebar brand header — validated design (prototype verdict):
 // - bar look: border-b border-sidebar-border
 // - h-14 header, matched h-14 page bar in app-shell
-// - circular M mark (logo-sm.png) + wordmark text (from i18n), links to "/"
-// - toggle inside the header (PanelLeftCloseIcon); collapsed: mark swaps to
-//   PanelLeftOpenIcon on hover. No badge, no team switcher.
+// - horizontal Monitor ERP logo lockup (logo.png, same as login page) at
+//   45px height, proportional width; links to "/"
+// - toggle inside the header (PanelLeftCloseIcon); collapsed: circular mark
+//   (logo-sm.png) swaps to PanelLeftOpenIcon on hover. No badge, no team switcher.
 
 export function BrandHeader() {
   const { state, isMobile, toggleSidebar, setOpenMobile } = useSidebar()
@@ -64,11 +65,15 @@ export function BrandHeader() {
         onClick={() => setOpenMobile(false)}
         className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-1 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
       >
-        {/* Circular M mark + wordmark text. */}
-        <img src="/logo-sm.png" alt="" className="size-6 shrink-0" />
-        <span className="truncate text-sm font-semibold text-brand">
-          {t("name")}
-        </span>
+        {/* Horizontal Monitor ERP logo lockup (same asset as the login page),
+            fixed 45px height with proportional width. */}
+        <img
+          src="/logo.png"
+          alt=""
+          className="h-[45px] w-auto max-w-full shrink-0 object-contain"
+          width={256}
+          height={74}
+        />
       </Link>
       <div className="ml-auto">
         <Tooltip>
