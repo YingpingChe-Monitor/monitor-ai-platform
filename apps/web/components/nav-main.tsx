@@ -20,13 +20,9 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronRightIcon, TerminalSquareIcon } from "lucide-react"
+import { ChevronRightIcon, TerminalSquareIcon, BlocksIcon } from "lucide-react"
 
 // Menu structure is built from the i18n dictionary — template-ready.
-// Only the Prototype group is shown: the other shadcn sample groups
-// (Models, Documentation, Settings) have no real pages yet and were removed;
-// projects list was removed too. Add entries back via the dictionary + nav-main.
-//
 // Active state is derived from the current pathname (usePathname): the
 // sub-item whose url matches the route is highlighted, and the top-level
 // group lights up when any of its sub-items is active — zero config for new
@@ -46,6 +42,14 @@ export function NavMain() {
       items: [
         { title: t("dashboard"), url: "/" },
         { title: t("cards"), url: "/prototype/cards" },
+      ],
+    },
+    {
+      title: t("components"),
+      url: "#",
+      icon: <BlocksIcon />,
+      items: [
+        { title: t("imagePreview"), url: "/components/image-preview" },
       ],
     },
   ]
