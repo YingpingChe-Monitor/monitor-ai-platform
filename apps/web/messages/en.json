@@ -157,6 +157,7 @@
     "departmentDevelopment": "Development",
     "departmentAfterSales": "After-sales",
     "errorRequired": "Please fill in all fields",
+    "errorInvalidEmail": "The email format is invalid, please check and retry",
     "errorTooShort": "Password must be at least 6 characters",
     "errorUsernameTaken": "Username already taken",
     "errorEmailTaken": "This email is already in use",

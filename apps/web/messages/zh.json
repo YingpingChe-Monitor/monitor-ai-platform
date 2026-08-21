@@ -157,6 +157,7 @@
     "departmentDevelopment": "开发",
     "departmentAfterSales": "售后",
     "errorRequired": "请填写所有字段",
+    "errorInvalidEmail": "邮箱格式不正确，请检查后重试",
     "errorTooShort": "密码至少 6 位",
     "errorUsernameTaken": "用户名已存在",
     "errorEmailTaken": "该邮箱已被使用",

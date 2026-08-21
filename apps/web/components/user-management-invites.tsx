@@ -66,7 +66,12 @@ import {
   type Session,
 } from "@/lib/auth"
 
-type InviteFormError = "required" | "email-taken" | "forbidden" | null
+type InviteFormError =
+  | "required"
+  | "invalid-email"
+  | "email-taken"
+  | "forbidden"
+  | null
 
 // Per-field invalid flags — only fields that are missing/malformed get the
 // red outline; already-filled fields stay untouched.
@@ -208,7 +213,10 @@ export function UserManagementInvites({ session }: { session: Session }) {
     // Per-field validation: mark only the fields that are missing or
     // malformed — fields the user already filled keep their normal look.
     const nextInvalid: InvalidFields = {}
-    if (!email.trim() || !EMAIL_RE.test(email.trim())) {
+    const emailTrimmed = email.trim()
+    if (!emailTrimmed) {
+      nextInvalid.email = true
+    } else if (!EMAIL_RE.test(emailTrimmed)) {
       nextInvalid.email = true
     }
     if (!name.trim()) nextInvalid.name = true
@@ -218,7 +226,12 @@ export function UserManagementInvites({ session }: { session: Session }) {
 
     setInvalid(nextInvalid)
     if (Object.keys(nextInvalid).length > 0) {
-      setError("required")
+      // More precise message: malformed email vs missing fields.
+      if (emailTrimmed && !EMAIL_RE.test(emailTrimmed)) {
+        setError("invalid-email")
+      } else {
+        setError("required")
+      }
       return
     }
     setError(null)
@@ -449,6 +462,7 @@ export function UserManagementInvites({ session }: { session: Session }) {
                 <Field data-invalid>
                   <FieldDescription className="text-destructive">
                     {error === "required" && t("errorRequired")}
+                    {error === "invalid-email" && t("errorInvalidEmail")}
                     {error === "email-taken" && t("errorEmailTaken")}
                     {error === "forbidden" && t("errorForbidden")}
                   </FieldDescription>
