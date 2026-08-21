@@ -222,7 +222,17 @@ export function UserManagementInvites({ session }: { session: Session }) {
     if (!name.trim()) nextInvalid.name = true
     if (!role) nextInvalid.role = true
     if (isInternal && !customerText.trim()) nextInvalid.customer = true
-    if (isInternal && !projectText.trim()) nextInvalid.project = true
+    // Project is required — unless the customer itself is brand new: a new
+    // customer automatically gets a default "{客户名} 实施项目", so the
+    // project field can stay empty in that case.
+    const customerIsNew =
+      isInternal &&
+      !customerId &&
+      customerText.trim() !== "" &&
+      !findCustomerByName(customerText.trim())
+    if (isInternal && !customerIsNew && !projectText.trim()) {
+      nextInvalid.project = true
+    }
 
     setInvalid(nextInvalid)
     if (Object.keys(nextInvalid).length > 0) {
