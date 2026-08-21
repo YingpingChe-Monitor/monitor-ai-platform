@@ -231,7 +231,16 @@ function writeJson(key: string, value: unknown) {
 export function getUsers(): User[] {
   const overrides = readJson<Record<string, Partial<User>>>(USERS_OVERRIDE_KEY)
   if (!overrides) return MOCK_USERS
-  return MOCK_USERS.map((u) => ({ ...u, ...(overrides[u.username] ?? {}) }))
+  // Seed users merged with their overrides…
+  const merged = MOCK_USERS.map((u) => ({ ...u, ...(overrides[u.username] ?? {}) }))
+  // …plus users created at runtime (internal accounts, invite activations),
+  // which only exist in the override store.
+  for (const [username, patch] of Object.entries(overrides)) {
+    if (!MOCK_USERS.some((u) => u.username === username)) {
+      merged.push({ ...(patch as User), username })
+    }
+  }
+  return merged
 }
 
 export function getCustomers(): Customer[] {

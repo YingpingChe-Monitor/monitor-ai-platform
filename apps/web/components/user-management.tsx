@@ -54,7 +54,7 @@ export function UserManagement() {
     session.user.role as (typeof MANAGER_ROLES)[number]
   )
   if (!isManager) {
-    return <UserManagementMyView session={session} onRefresh={refreshUsers} />
+    return <UserManagementMyView session={session} />
   }
 
   const isSuperadmin = session.user.role === "superadmin"
