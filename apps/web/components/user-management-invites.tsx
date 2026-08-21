@@ -68,6 +68,18 @@ import {
 
 type InviteFormError = "required" | "email-taken" | "forbidden" | null
 
+// Per-field invalid flags — only fields that are missing/malformed get the
+// red outline; already-filled fields stay untouched.
+type InvalidFields = {
+  email?: boolean
+  name?: boolean
+  role?: boolean
+  customer?: boolean
+  project?: boolean
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 // What the confirm dialog must create before the invite can be sent.
 type PendingCreation =
   | {
@@ -107,6 +119,7 @@ export function UserManagementInvites({ session }: { session: Session }) {
   const [projectId, setProjectId] = useState("")
   const [projectText, setProjectText] = useState("")
   const [error, setError] = useState<InviteFormError>(null)
+  const [invalid, setInvalid] = useState<InvalidFields>({})
   const [submitting, setSubmitting] = useState(false)
   const [pendingCreation, setPendingCreation] = useState<PendingCreation>(null)
   const [lastLink, setLastLink] = useState<string | null>(null)
@@ -192,7 +205,19 @@ export function UserManagementInvites({ session }: { session: Session }) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email.trim() || !name.trim() || !role || !customerText.trim() || !projectText.trim()) {
+    // Per-field validation: mark only the fields that are missing or
+    // malformed — fields the user already filled keep their normal look.
+    const nextInvalid: InvalidFields = {}
+    if (!email.trim() || !EMAIL_RE.test(email.trim())) {
+      nextInvalid.email = true
+    }
+    if (!name.trim()) nextInvalid.name = true
+    if (!role) nextInvalid.role = true
+    if (isInternal && !customerText.trim()) nextInvalid.customer = true
+    if (isInternal && !projectText.trim()) nextInvalid.project = true
+
+    setInvalid(nextInvalid)
+    if (Object.keys(nextInvalid).length > 0) {
       setError("required")
       return
     }
@@ -200,6 +225,12 @@ export function UserManagementInvites({ session }: { session: Session }) {
     const targets = resolveTargets()
     if (!targets) return // 等待确认弹窗
     sendInvite(targets.customerId, targets.projectId)
+  }
+
+  // Typing/selecting a field clears its invalid flag (red outline disappears
+  // as soon as the field is fixed).
+  function clearInvalid(field: keyof InvalidFields) {
+    setInvalid((prev) => (prev[field] ? { ...prev, [field]: false } : prev))
   }
 
   // User confirmed the creation dialog: create what's missing, then invite.
@@ -304,32 +335,41 @@ export function UserManagementInvites({ session }: { session: Session }) {
         <CardContent>
           <form onSubmit={handleSubmit} noValidate>
             <FieldGroup>
-              <Field data-invalid={error === "required"}>
+              <Field data-invalid={invalid.email}>
                 <FieldLabel htmlFor="inv-email">{t("inviteEmail")}</FieldLabel>
                 <Input
                   id="inv-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  aria-invalid={error === "required"}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    clearInvalid("email")
+                  }}
+                  aria-invalid={invalid.email}
                   placeholder={t("inviteEmailPlaceholder")}
                 />
               </Field>
-              <Field data-invalid={error === "required"}>
+              <Field data-invalid={invalid.name}>
                 <FieldLabel htmlFor="inv-name">{t("inviteName")}</FieldLabel>
                 <Input
                   id="inv-name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  aria-invalid={error === "required"}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    clearInvalid("name")
+                  }}
+                  aria-invalid={invalid.name}
                   placeholder={t("inviteNamePlaceholder")}
                 />
               </Field>
-              <Field data-invalid={error === "required"}>
+              <Field data-invalid={invalid.role}>
                 <FieldLabel htmlFor="inv-role">{t("inviteRole")}</FieldLabel>
                 <Select
                   value={role || null}
-                  onValueChange={(v) => setRole((v ?? "") as typeof role)}
+                  onValueChange={(v) => {
+                    setRole((v ?? "") as typeof role)
+                    clearInvalid("role")
+                  }}
                 >
                   <SelectTrigger id="inv-role" className="w-full">
                     {/* Format the selected value back to its display label —
@@ -350,13 +390,14 @@ export function UserManagementInvites({ session }: { session: Session }) {
                 </Select>
               </Field>
               {isInternal && (
-                <Field data-invalid={error === "required"}>
+                <Field data-invalid={invalid.customer}>
                   <FieldLabel htmlFor="inv-customer">{t("inviteCustomer")}</FieldLabel>
                   <CreatableCombobox
                     options={customers.map((c) => ({ value: c.id, label: c.name }))}
                     value={customerId}
                     onValueChange={(v) => {
                       setCustomerId(v)
+                      clearInvalid("customer")
                       // 换客户后清空项目选择，防止项目与客户错配
                       if (v) {
                         setProjectId("")
@@ -364,7 +405,10 @@ export function UserManagementInvites({ session }: { session: Session }) {
                       }
                     }}
                     text={customerText}
-                    onTextChange={setCustomerText}
+                    onTextChange={(v) => {
+                      setCustomerText(v)
+                      clearInvalid("customer")
+                    }}
                     placeholder={t("inviteCustomerPlaceholder")}
                     allowCreate
                     emptyText={t("comboboxEmpty")}
@@ -373,7 +417,7 @@ export function UserManagementInvites({ session }: { session: Session }) {
                   />
                 </Field>
               )}
-              <Field data-invalid={error === "required"}>
+              <Field data-invalid={invalid.project}>
                 <FieldLabel htmlFor="inv-project">{t("inviteProject")}</FieldLabel>
                 <CreatableCombobox
                   options={availableProjects.map((p) => ({
@@ -381,9 +425,17 @@ export function UserManagementInvites({ session }: { session: Session }) {
                     label: p.name,
                   }))}
                   value={effectiveProjectId}
-                  onValueChange={setProjectId}
+                  onValueChange={(v) => {
+                    setProjectId(v)
+                    clearInvalid("project")
+                  }}
                   text={isInternal ? projectText : projectName(lockedProject)}
-                  onTextChange={isInternal ? setProjectText : () => {}}
+                  onTextChange={(v) => {
+                    if (isInternal) {
+                      setProjectText(v)
+                      clearInvalid("project")
+                    }
+                  }}
                   placeholder={t("inviteProjectPlaceholder")}
                   allowCreate={isInternal}
                   emptyText={t("comboboxEmpty")}
