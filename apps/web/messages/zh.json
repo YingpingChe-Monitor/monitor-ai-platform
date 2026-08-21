@@ -178,7 +178,7 @@
     "roleSuperadmin": "超级管理员",
     "roleInternal": "内部用户",
     "roleCustomerPm": "客户项目经理",
-    "roleKeyUser": "Key User",
+    "roleKeyUser": "客户关键用户",
     "roleRegular": "普通用户",
     "statusActive": "激活",
     "statusInactive": "停用",
