@@ -89,9 +89,15 @@ export function UserManagementInvites({ session }: { session: Session }) {
   const effectiveCustomerId = isInternal ? customerId : lockedCustomer
   const effectiveProjectId = isInternal ? projectId : lockedProject
 
+  // Project choices: internal users pick from the selected customer's
+  // projects; a customer PM only sees the projects they are the PM of
+  // (mock: actor.projectIds) — never their customer's other projects.
   const availableProjects = useMemo(
-    () => projects.filter((p) => p.customerId === effectiveCustomerId),
-    [projects, effectiveCustomerId]
+    () =>
+      isInternal
+        ? projects.filter((p) => p.customerId === effectiveCustomerId)
+        : projects.filter((p) => (actor.projectIds ?? []).includes(p.id)),
+    [projects, effectiveCustomerId, isInternal, actor.projectIds]
   )
 
   const invitableRoles = useMemo(
