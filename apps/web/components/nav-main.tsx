@@ -20,7 +20,12 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronRightIcon, TerminalSquareIcon, BlocksIcon } from "lucide-react"
+import {
+  ChevronRightIcon,
+  TerminalSquareIcon,
+  BlocksIcon,
+  ClipboardListIcon,
+} from "lucide-react"
 
 // Menu structure is built from the i18n dictionary — template-ready.
 // Active state is derived from the current pathname (usePathname): the
@@ -51,6 +56,14 @@ export function NavMain() {
       items: [
         { title: t("imagePreview"), url: "/components/image-preview" },
         { title: t("pdfPreview"), url: "/components/pdf-preview" },
+      ],
+    },
+    {
+      title: t("generalRegistration"),
+      url: "#",
+      icon: <ClipboardListIcon />,
+      items: [
+        { title: t("userManagement"), url: "/general-registration/user-management" },
       ],
     },
   ]

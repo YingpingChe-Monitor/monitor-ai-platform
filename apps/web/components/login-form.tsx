@@ -16,7 +16,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input"
 import { login } from "@/lib/auth"
 
-type FormError = "user-not-found" | "wrong-password" | "required" | null
+type FormError = "user-not-found" | "wrong-password" | "inactive" | "required" | null
 
 export function LoginForm() {
   const t = useTranslations("Login")
@@ -40,7 +40,7 @@ export function LoginForm() {
       const result = login(username, password)
       setSubmitting(false)
       if (!result.ok) {
-        setError(result.error)
+        setError(result.error === "inactive" ? "inactive" : result.error)
         return
       }
       toast.success(t("success"))
@@ -97,6 +97,7 @@ export function LoginForm() {
                 <FieldDescription className="text-destructive">
                   {error === "user-not-found" && t("errorUserNotFound")}
                   {error === "wrong-password" && t("errorWrongPassword")}
+                  {error === "inactive" && t("errorInactive")}
                   {error === "required" && t("errorRequired")}
                 </FieldDescription>
               </Field>
