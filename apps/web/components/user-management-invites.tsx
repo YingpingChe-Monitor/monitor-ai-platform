@@ -11,6 +11,7 @@ import {
   XCircleIcon,
 } from "lucide-react"
 
+import { CreatableCombobox } from "@/components/creatable-combobox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,6 +21,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Field,
   FieldDescription,
@@ -43,7 +50,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
+  createCustomer,
   createInvite,
+  createProject,
+  findCustomerByName,
+  findProjectByName,
+  findSimilarCustomers,
   getCustomers,
   getInvites,
   getProjects,
@@ -55,6 +67,17 @@ import {
 } from "@/lib/auth"
 
 type InviteFormError = "required" | "email-taken" | "forbidden" | null
+
+// What the confirm dialog must create before the invite can be sent.
+type PendingCreation =
+  | {
+      kind: "customer" // 新客户 + 默认实施项目（若用户没另填项目名）
+      customerName: string
+      similarCustomers: string[]
+      projectName?: string // 用户自定义的项目名（若有）
+    }
+  | { kind: "project"; projectName: string; customerId: string; customerName: string }
+  | null
 
 // Roles an inviter may grant. Customer PMs may only invite Key User / 普通用户
 // inside their own project; superadmin / internal users may also create
@@ -70,20 +93,27 @@ export function UserManagementInvites({ session }: { session: Session }) {
   const actor = session.user
   const isInternal = actor.role === "superadmin" || actor.role === "internal"
 
+  const [directoryVersion, setDirectoryVersion] = useState(0)
+  // 每次渲染读取（数据量小）：创建客户/项目后 bump directoryVersion 触发重渲染
   const customers = getCustomers()
   const projects = getProjects()
+  void directoryVersion
 
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
   const [role, setRole] = useState<(typeof INVITABLE_ROLES)[number]["value"] | "">("")
   const [customerId, setCustomerId] = useState("")
+  const [customerText, setCustomerText] = useState("")
   const [projectId, setProjectId] = useState("")
+  const [projectText, setProjectText] = useState("")
   const [error, setError] = useState<InviteFormError>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [pendingCreation, setPendingCreation] = useState<PendingCreation>(null)
   const [lastLink, setLastLink] = useState<string | null>(null)
   const [invites, setInvites] = useState<Invite[]>(() => getInvites())
 
-  // Customer PM scope: locked to their own customer + project, no PM role.
+  // Customer PM scope: locked to their own customer + project, no PM role and
+  // no custom creation.
   const lockedCustomer = !isInternal ? actor.customerId ?? "" : ""
   const lockedProject = !isInternal ? (actor.projectIds?.[0] ?? "") : ""
   const effectiveCustomerId = isInternal ? customerId : lockedCustomer
@@ -106,16 +136,113 @@ export function UserManagementInvites({ session }: { session: Session }) {
     [isInternal]
   )
 
+  const customerName = (id?: string) =>
+    customers.find((c) => c.id === id)?.name ?? "—"
   const projectName = (id?: string) =>
     projects.find((p) => p.id === id)?.name ?? "—"
 
+  // Resolve the customer/project the invite will target, queueing creation of
+  // anything that doesn't exist yet. Returns null when a confirm dialog must
+  // be shown first.
+  function resolveTargets():
+    | { customerId: string; projectId: string }
+    | null {
+    let cid = effectiveCustomerId
+    let pid = effectiveProjectId
+
+    if (isInternal) {
+      // Customer: match existing by name, else queue creation.
+      const customerQuery = customerText.trim()
+      if (!cid && customerQuery) {
+        const existing = findCustomerByName(customerQuery)
+        if (existing) {
+          cid = existing.id
+        } else {
+          const projectQuery = projectText.trim()
+          setPendingCreation({
+            kind: "customer",
+            customerName: customerQuery,
+            similarCustomers: findSimilarCustomers(customerQuery).map((c) => c.name),
+            // 新客户默认项目为「{客户名} 实施项目」，除非用户另填了项目名
+            projectName: projectQuery || undefined,
+          })
+          return null
+        }
+      }
+      // Project: match existing under the selected customer, else queue.
+      if (cid && !pid && projectText.trim()) {
+        const existing = findProjectByName(cid, projectText.trim())
+        if (existing) {
+          pid = existing.id
+        } else {
+          setPendingCreation({
+            kind: "project",
+            projectName: projectText.trim(),
+            customerId: cid,
+            customerName: customerName(cid),
+          })
+          return null
+        }
+      }
+    }
+
+    if (!cid || !pid) return null
+    return { customerId: cid, projectId: pid }
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email.trim() || !name.trim() || !role || !effectiveCustomerId || !effectiveProjectId) {
+    if (!email.trim() || !name.trim() || !role || !customerText.trim() || !projectText.trim()) {
       setError("required")
       return
     }
     setError(null)
+    const targets = resolveTargets()
+    if (!targets) return // 等待确认弹窗
+    sendInvite(targets.customerId, targets.projectId)
+  }
+
+  // User confirmed the creation dialog: create what's missing, then invite.
+  function handleConfirmCreation() {
+    if (!pendingCreation) return
+    let cid = effectiveCustomerId
+    let pid = effectiveProjectId
+
+    if (pendingCreation.kind === "customer") {
+      const created = createCustomer(pendingCreation.customerName)
+      if (created.ok) {
+        cid = created.customer.id
+        setCustomerId(cid)
+        setCustomerText(created.customer.name)
+        const projectResult = createProject(
+          cid,
+          pendingCreation.projectName ?? `${created.customer.name} 实施项目`
+        )
+        if (projectResult.ok) {
+          pid = projectResult.project.id
+          setProjectId(pid)
+          setProjectText(projectResult.project.name)
+        }
+        setDirectoryVersion((v) => v + 1)
+      }
+    } else {
+      const created = createProject(
+        pendingCreation.customerId,
+        pendingCreation.projectName
+      )
+      if (created.ok) {
+        pid = created.project.id
+        setProjectId(pid)
+        setProjectText(created.project.name)
+        setDirectoryVersion((v) => v + 1)
+      }
+    }
+
+    setPendingCreation(null)
+    if (cid && pid) sendInvite(cid, pid)
+  }
+
+  function sendInvite(customerId: string, projectId: string) {
     setSubmitting(true)
     // Small delay so the loading state is visible (mock auth is synchronous).
     window.setTimeout(() => {
@@ -123,8 +250,8 @@ export function UserManagementInvites({ session }: { session: Session }) {
         email,
         name,
         role: role as "customer-pm" | "key-user" | "regular",
-        customerId: effectiveCustomerId,
-        projectId: effectiveProjectId,
+        customerId,
+        projectId,
       })
       setSubmitting(false)
       if (!result.ok) {
@@ -144,7 +271,9 @@ export function UserManagementInvites({ session }: { session: Session }) {
       setRole("")
       if (isInternal) {
         setCustomerId("")
+        setCustomerText("")
         setProjectId("")
+        setProjectText("")
       }
       setInvites(getInvites())
     }, 500)
@@ -217,44 +346,45 @@ export function UserManagementInvites({ session }: { session: Session }) {
               {isInternal && (
                 <Field data-invalid={error === "required"}>
                   <FieldLabel htmlFor="inv-customer">{t("inviteCustomer")}</FieldLabel>
-                  <Select
-                    value={customerId || null}
+                  <CreatableCombobox
+                    options={customers.map((c) => ({ value: c.id, label: c.name }))}
+                    value={customerId}
                     onValueChange={(v) => {
-                      setCustomerId(v ?? "")
-                      setProjectId("")
+                      setCustomerId(v)
+                      // 换客户后清空项目选择，防止项目与客户错配
+                      if (v) {
+                        setProjectId("")
+                        setProjectText("")
+                      }
                     }}
-                  >
-                    <SelectTrigger id="inv-customer" className="w-full">
-                      <SelectValue placeholder={t("inviteCustomerPlaceholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    text={customerText}
+                    onTextChange={setCustomerText}
+                    placeholder={t("inviteCustomerPlaceholder")}
+                    allowCreate
+                    emptyText={t("comboboxEmpty")}
+                    createLabel={(text) => t("comboboxCreate", { text })}
+                    className="w-full"
+                  />
                 </Field>
               )}
               <Field data-invalid={error === "required"}>
                 <FieldLabel htmlFor="inv-project">{t("inviteProject")}</FieldLabel>
-                <Select
-                  value={effectiveProjectId || null}
-                  onValueChange={(v) => setProjectId(v ?? "")}
-                  disabled={!isInternal && !lockedProject}
-                >
-                  <SelectTrigger id="inv-project" className="w-full">
-                    <SelectValue placeholder={t("inviteProjectPlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableProjects.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CreatableCombobox
+                  options={availableProjects.map((p) => ({
+                    value: p.id,
+                    label: p.name,
+                  }))}
+                  value={effectiveProjectId}
+                  onValueChange={setProjectId}
+                  text={isInternal ? projectText : projectName(lockedProject)}
+                  onTextChange={isInternal ? setProjectText : () => {}}
+                  placeholder={t("inviteProjectPlaceholder")}
+                  allowCreate={isInternal}
+                  emptyText={t("comboboxEmpty")}
+                  createLabel={(text) => t("comboboxCreate", { text })}
+                  disabled={!isInternal}
+                  className="w-full"
+                />
               </Field>
 
               {error && (
@@ -316,6 +446,7 @@ export function UserManagementInvites({ session }: { session: Session }) {
                 <TableRow>
                   <TableHead>{t("colInviteEmail")}</TableHead>
                   <TableHead>{t("colInviteRole")}</TableHead>
+                  <TableHead>{t("colInviteCustomer")}</TableHead>
                   <TableHead>{t("colInviteProject")}</TableHead>
                   <TableHead>{t("colInviteStatus")}</TableHead>
                   <TableHead>{t("colInviteCreated")}</TableHead>
@@ -330,6 +461,7 @@ export function UserManagementInvites({ session }: { session: Session }) {
                     <TableRow key={invite.token}>
                       <TableCell className="font-medium">{invite.email}</TableCell>
                       <TableCell>{t(inviteRoleLabelKey(invite.role))}</TableCell>
+                      <TableCell>{customerName(invite.customerId)}</TableCell>
                       <TableCell>{projectName(invite.projectId)}</TableCell>
                       <TableCell>
                         <StatusBadge status={status} t={t} />
@@ -353,7 +485,7 @@ export function UserManagementInvites({ session }: { session: Session }) {
                 })}
                 {invites.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                       {t("emptyInvites")}
                     </TableCell>
                   </TableRow>
@@ -363,6 +495,49 @@ export function UserManagementInvites({ session }: { session: Session }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* 创建确认弹窗：客户/项目不存在时，确认后再创建并继续邀请 */}
+      <Dialog
+        open={pendingCreation !== null}
+        onOpenChange={(open) => !open && setPendingCreation(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle>{t("confirmCreateTitle")}</DialogTitle>
+          <DialogDescription>
+            {pendingCreation?.kind === "customer" ? (
+              <>
+                {t("confirmCreateCustomer", {
+                  name: pendingCreation.customerName,
+                  project:
+                    pendingCreation.projectName ??
+                    `${pendingCreation.customerName} 实施项目`,
+                })}
+                {pendingCreation.similarCustomers.length > 0 && (
+                  <p className="mt-2 text-destructive">
+                    {t("similarCustomersHint", {
+                      names: pendingCreation.similarCustomers.join("、"),
+                    })}
+                  </p>
+                )}
+              </>
+            ) : (
+              pendingCreation &&
+              t("confirmCreateProject", {
+                name: pendingCreation.projectName,
+                customer: pendingCreation.customerName,
+              })
+            )}
+          </DialogDescription>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setPendingCreation(null)}>
+              {t("cancel")}
+            </Button>
+            <Button onClick={handleConfirmCreation}>
+              {t("confirmCreateButton")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

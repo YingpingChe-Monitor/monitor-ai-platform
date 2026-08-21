@@ -203,6 +203,8 @@ const SESSION_KEY = "monitor_g5_session"
 const PASSWORD_OVERRIDE_KEY = "monitor_g5_password_overrides"
 const USERS_OVERRIDE_KEY = "monitor_g5_users_overrides" // 新增/修改的用户（种子外的持久层）
 const INVITES_KEY = "monitor_g5_invites"
+const CUSTOMERS_OVERRIDE_KEY = "monitor_g5_customers" // 运行时创建的客户（持久层）
+const PROJECTS_OVERRIDE_KEY = "monitor_g5_projects" // 运行时创建的项目（持久层）
 
 // Session lifetime used by the token-refresh demo (30 minutes).
 export const SESSION_TTL_MS = 30 * 60 * 1000
@@ -244,11 +246,111 @@ export function getUsers(): User[] {
 }
 
 export function getCustomers(): Customer[] {
-  return MOCK_CUSTOMERS
+  const overrides = readJson<Record<string, Customer>>(CUSTOMERS_OVERRIDE_KEY)
+  if (!overrides) return MOCK_CUSTOMERS
+  return [...MOCK_CUSTOMERS, ...Object.values(overrides)]
 }
 
 export function getProjects(): Project[] {
-  return MOCK_PROJECTS
+  const overrides = readJson<Record<string, Project>>(PROJECTS_OVERRIDE_KEY)
+  if (!overrides) return MOCK_PROJECTS
+  return [...MOCK_PROJECTS, ...Object.values(overrides)]
+}
+
+// Runtime-created customers / projects get UUIDs (database-friendly: unique,
+// no auto-increment coupling; the seed keeps its short ids so demo data and
+// runtime data never collide).
+function newId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID()
+  }
+  return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+}
+
+export type CreateCustomerResult =
+  | { ok: true; customer: Customer; created: boolean }
+  | { ok: false; error: "empty-name" }
+
+/** Find a customer by exact name (trim + case-insensitive). */
+export function findCustomerByName(name: string): Customer | undefined {
+  const q = name.trim().toLowerCase()
+  if (!q) return undefined
+  return getCustomers().find((c) => c.name.trim().toLowerCase() === q)
+}
+
+/**
+ * Customers whose name contains the query or vice versa (trim +
+ * case-insensitive) — used to warn about near-duplicates before creating.
+ */
+export function findSimilarCustomers(name: string): Customer[] {
+  const q = name.trim().toLowerCase()
+  if (!q) return []
+  return getCustomers().filter((c) => {
+    const n = c.name.trim().toLowerCase()
+    if (n === q) return false // exact match is handled by findCustomerByName
+    return n.includes(q) || q.includes(n)
+  })
+}
+
+/**
+ * Create a customer if one with the same name (trim + case-insensitive) does
+ * not already exist; returns the existing one otherwise.
+ */
+export function createCustomer(name: string): CreateCustomerResult {
+  const trimmed = name.trim()
+  if (!trimmed) return { ok: false, error: "empty-name" }
+  const existing = findCustomerByName(trimmed)
+  if (existing) return { ok: true, customer: existing, created: false }
+
+  const customer: Customer = { id: newId(), name: trimmed }
+  const overrides = readJson<Record<string, Customer>>(CUSTOMERS_OVERRIDE_KEY) ?? {}
+  overrides[customer.id] = customer
+  writeJson(CUSTOMERS_OVERRIDE_KEY, overrides)
+  return { ok: true, customer, created: true }
+}
+
+export type CreateProjectResult =
+  | { ok: true; project: Project; created: boolean }
+  | { ok: false; error: "empty-name" | "customer-not-found" }
+
+/** Find a project of a customer by exact name (trim + case-insensitive). */
+export function findProjectByName(
+  customerId: string,
+  name: string
+): Project | undefined {
+  const q = name.trim().toLowerCase()
+  if (!q) return undefined
+  return getProjects().find(
+    (p) => p.customerId === customerId && p.name.trim().toLowerCase() === q
+  )
+}
+
+/**
+ * Create a project under a customer if one with the same name does not
+ * already exist there; returns the existing one otherwise.
+ */
+export function createProject(
+  customerId: string,
+  name: string
+): CreateProjectResult {
+  const trimmed = name.trim()
+  if (!trimmed) return { ok: false, error: "empty-name" }
+  if (!getCustomers().some((c) => c.id === customerId)) {
+    return { ok: false, error: "customer-not-found" }
+  }
+  const existing = findProjectByName(customerId, trimmed)
+  if (existing) return { ok: true, project: existing, created: false }
+
+  const project: Project = {
+    id: newId(),
+    name: trimmed,
+    customerId,
+    pmUserId: null, // 新项目尚无项目经理，由后续邀请/指派产生
+  }
+  const overrides = readJson<Record<string, Project>>(PROJECTS_OVERRIDE_KEY) ?? {}
+  overrides[project.id] = project
+  writeJson(PROJECTS_OVERRIDE_KEY, overrides)
+  return { ok: true, project, created: true }
 }
 
 function saveUserOverride(username: string, patch: Partial<User>) {

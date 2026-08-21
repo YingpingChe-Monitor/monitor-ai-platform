@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { BanIcon, CheckCircle2Icon, Loader2Icon, UserPlusIcon } from "lucide-react"
 
+import { CreatableCombobox } from "@/components/creatable-combobox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -333,34 +334,36 @@ export function UserManagementMembers({
           placeholder={t("searchPlaceholder")}
           className="w-full max-w-64"
         />
-        <Select
+        <CreatableCombobox
+          options={ROLE_OPTIONS.map((opt) => ({
+            value: opt.value,
+            label: t(opt.labelKey),
+          }))}
           value={roleFilter}
           onValueChange={(v) => setRoleFilter((v ?? "all") as User["role"] | "all")}
-        >
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder={t("filterRole")} />
-          </SelectTrigger>
-          <SelectContent>
-            {ROLE_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {t(opt.labelKey)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={projectFilter} onValueChange={(v) => setProjectFilter(v ?? "all")}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder={t("filterProject")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("allProjects")}</SelectItem>
-            {projects.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          text={roleFilter === "all" ? t("allRoles") : t(roleLabelKey(roleFilter))}
+          onTextChange={() => {}}
+          placeholder={t("filterRole")}
+          emptyText={t("comboboxEmpty")}
+          className="w-36"
+        />
+        <CreatableCombobox
+          options={[
+            { value: "all", label: t("allProjects") },
+            ...projects.map((p) => ({ value: p.id, label: p.name })),
+          ]}
+          value={projectFilter}
+          onValueChange={(v) => setProjectFilter(v ?? "all")}
+          text={
+            projectFilter === "all"
+              ? t("allProjects")
+              : projects.find((p) => p.id === projectFilter)?.name ?? ""
+          }
+          onTextChange={() => {}}
+          placeholder={t("filterProject")}
+          emptyText={t("comboboxEmpty")}
+          className="w-40"
+        />
         {actor.role === "superadmin" && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
             <UserPlusIcon data-icon="inline-start" />
@@ -477,4 +480,21 @@ function departmentLabelKey(department: InternalDepartment) {
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join("")}`
+}
+
+function roleLabelKey(role: User["role"] | "all") {
+  switch (role) {
+    case "superadmin":
+      return "roleSuperadmin"
+    case "internal":
+      return "roleInternal"
+    case "customer-pm":
+      return "roleCustomerPm"
+    case "key-user":
+      return "roleKeyUser"
+    case "regular":
+      return "roleRegular"
+    default:
+      return "allRoles"
+  }
 }
