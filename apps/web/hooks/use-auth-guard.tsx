@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { getSession } from "@/lib/auth"
+import { getSession, refreshSessionIfNeeded } from "@/lib/auth"
 
 // Client-side route guard: localStorage cannot be read by proxy.ts (server),
 // so the guard must live in a client component. Any page wrapped with this
@@ -13,7 +13,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (!getSession()) {
+    // Story 8: token auto-refresh — silently renew an expired session when
+    // the app boots. If renewal fails (user disabled / gone), sign out.
+    const result = refreshSessionIfNeeded()
+    if (result.status === "expired" || !getSession()) {
       router.replace("/login")
     } else {
       // Reading localStorage is an external-system check that can only run
