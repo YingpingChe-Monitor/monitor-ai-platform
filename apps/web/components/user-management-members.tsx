@@ -1,11 +1,23 @@
 "use client"
 
+import * as React from "react"
 import { useMemo, useState } from "react"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { BanIcon, CheckCircle2Icon, Loader2Icon, UserPlusIcon } from "lucide-react"
 
-import { CreatableCombobox } from "@/components/creatable-combobox"
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from "@/components/ui/combobox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -53,8 +65,8 @@ import {
   type User,
 } from "@/lib/auth"
 
-const ROLE_OPTIONS: { value: User["role"] | "all"; labelKey: string }[] = [
-  { value: "all", labelKey: "allRoles" },
+// Role filter options: multi-select (empty = 全部角色), so no "all" entry.
+const ROLE_OPTIONS: { value: User["role"]; labelKey: string }[] = [
   { value: "superadmin", labelKey: "roleSuperadmin" },
   { value: "internal", labelKey: "roleInternal" },
   { value: "customer-pm", labelKey: "roleCustomerPm" },
@@ -252,8 +264,9 @@ export function UserManagementMembers({
 }) {
   const t = useTranslations("UserManagement")
   const [search, setSearch] = useState("")
-  const [roleFilter, setRoleFilter] = useState<User["role"] | "all">("all")
-  const [projectFilter, setProjectFilter] = useState<string>("all")
+  // Multi-select filters: empty array = 全部 (no filter).
+  const [roleFilter, setRoleFilter] = useState<User["role"][]>([])
+  const [projectFilter, setProjectFilter] = useState<string[]>([])
   const [createOpen, setCreateOpen] = useState(false)
 
   const customers = getCustomers()
@@ -275,8 +288,11 @@ export function UserManagementMembers({
     })
     const query = search.trim().toLowerCase()
     return scoped.filter((u) => {
-      if (roleFilter !== "all" && u.role !== roleFilter) return false
-      if (projectFilter !== "all" && !(u.projectIds ?? []).includes(projectFilter)) {
+      if (roleFilter.length > 0 && !roleFilter.includes(u.role)) return false
+      if (
+        projectFilter.length > 0 &&
+        !(u.projectIds ?? []).some((pid) => projectFilter.includes(pid))
+      ) {
         return false
       }
       if (!query) return true
@@ -334,35 +350,16 @@ export function UserManagementMembers({
           placeholder={t("searchPlaceholder")}
           className="w-full max-w-64"
         />
-        <CreatableCombobox
-          options={ROLE_OPTIONS.map((opt) => ({
-            value: opt.value,
-            label: t(opt.labelKey),
-          }))}
-          value={roleFilter}
-          onValueChange={(v) => setRoleFilter((v ?? "all") as User["role"] | "all")}
-          text={roleFilter === "all" ? t("allRoles") : t(roleLabelKey(roleFilter))}
-          onTextChange={() => {}}
-          placeholder={t("filterRole")}
-          emptyText={t("comboboxEmpty")}
-          className="w-36"
+        <RoleFilterCombobox
+          roleFilter={roleFilter}
+          setRoleFilter={setRoleFilter}
+          t={t}
         />
-        <CreatableCombobox
-          options={[
-            { value: "all", label: t("allProjects") },
-            ...projects.map((p) => ({ value: p.id, label: p.name })),
-          ]}
-          value={projectFilter}
-          onValueChange={(v) => setProjectFilter(v ?? "all")}
-          text={
-            projectFilter === "all"
-              ? t("allProjects")
-              : projects.find((p) => p.id === projectFilter)?.name ?? ""
-          }
-          onTextChange={() => {}}
-          placeholder={t("filterProject")}
-          emptyText={t("comboboxEmpty")}
-          className="w-40"
+        <ProjectFilterCombobox
+          projectFilter={projectFilter}
+          setProjectFilter={setProjectFilter}
+          projects={projects}
+          t={t}
         />
         {actor.role === "superadmin" && (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -482,19 +479,123 @@ function departmentLabelKey(department: InternalDepartment) {
     .join("")}`
 }
 
-function roleLabelKey(role: User["role"] | "all") {
-  switch (role) {
-    case "superadmin":
-      return "roleSuperadmin"
-    case "internal":
-      return "roleInternal"
-    case "customer-pm":
-      return "roleCustomerPm"
-    case "key-user":
-      return "roleKeyUser"
-    case "regular":
-      return "roleRegular"
-    default:
-      return "allRoles"
-  }
+type FilterT = (key: string) => string
+
+type FilterOption = { value: string; label: string }
+
+// Multi-select role filter. `autoComplete="none"` keeps the list static: no
+// typeahead filtering and no inline autocompletion — the six roles are simply
+// picked from the dropdown (multi-select chips). Creation is not offered.
+function RoleFilterCombobox({
+  roleFilter,
+  setRoleFilter,
+  t,
+}: {
+  roleFilter: User["role"][]
+  setRoleFilter: (next: User["role"][]) => void
+  t: FilterT
+}) {
+  const anchorRef = useComboboxAnchor()
+  const options: FilterOption[] = ROLE_OPTIONS.map((opt) => ({
+    value: opt.value,
+    label: t(opt.labelKey),
+  }))
+  const selected = options.filter((o) => roleFilter.includes(o.value as User["role"]))
+
+  return (
+    <Combobox
+      items={options}
+      multiple
+      value={selected}
+      onValueChange={(next) =>
+        setRoleFilter((next ?? []).map((o) => o.value as User["role"]))
+      }
+      autoComplete="none"
+      filter={null}
+    >
+      <ComboboxChips ref={anchorRef} className="w-36">
+        <ComboboxValue>
+          {(value: FilterOption[] | null) => (
+            <React.Fragment>
+              {(value ?? []).map((o) => (
+                <ComboboxChip key={o.value}>{o.label}</ComboboxChip>
+              ))}
+              <ComboboxChipsInput
+                placeholder={value && value.length > 0 ? "" : t("allRoles")}
+                className="w-full min-w-0"
+              />
+            </React.Fragment>
+          )}
+        </ComboboxValue>
+      </ComboboxChips>
+      <ComboboxContent anchor={anchorRef}>
+        <ComboboxEmpty>{t("comboboxEmpty")}</ComboboxEmpty>
+        <ComboboxList>
+          {(item: FilterOption) => (
+            <ComboboxItem key={item.value} value={item}>
+              {item.label}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  )
+}
+
+// Multi-select project filter. Typeahead filtering stays on (the default
+// `autoComplete="list"`), so users can type to narrow the projects, but
+// creation is not offered — this is a filter, not an invite form.
+function ProjectFilterCombobox({
+  projectFilter,
+  setProjectFilter,
+  projects,
+  t,
+}: {
+  projectFilter: string[]
+  setProjectFilter: (next: string[]) => void
+  projects: { id: string; name: string }[]
+  t: FilterT
+}) {
+  const anchorRef = useComboboxAnchor()
+  const options: FilterOption[] = projects.map((p) => ({
+    value: p.id,
+    label: p.name,
+  }))
+  const selected = options.filter((o) => projectFilter.includes(o.value))
+
+  return (
+    <Combobox
+      items={options}
+      multiple
+      value={selected}
+      onValueChange={(next) => setProjectFilter((next ?? []).map((o) => o.value))}
+      autoComplete="list"
+    >
+      <ComboboxChips ref={anchorRef} className="w-44">
+        <ComboboxValue>
+          {(value: FilterOption[] | null) => (
+            <React.Fragment>
+              {(value ?? []).map((o) => (
+                <ComboboxChip key={o.value}>{o.label}</ComboboxChip>
+              ))}
+              <ComboboxChipsInput
+                placeholder={value && value.length > 0 ? "" : t("allProjects")}
+                className="w-full min-w-0"
+              />
+            </React.Fragment>
+          )}
+        </ComboboxValue>
+      </ComboboxChips>
+      <ComboboxContent anchor={anchorRef}>
+        <ComboboxEmpty>{t("comboboxEmpty")}</ComboboxEmpty>
+        <ComboboxList>
+          {(item: FilterOption) => (
+            <ComboboxItem key={item.value} value={item}>
+              {item.label}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  )
 }
