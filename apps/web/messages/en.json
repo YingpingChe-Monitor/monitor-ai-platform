@@ -36,6 +36,7 @@
     "components": "Components",
     "imagePreview": "Image Preview",
     "pdfPreview": "PDF Preview",
+    "generalRegistration": "General Registration",
     "userManagement": "User Management"
   },
   "PdfPreview": {

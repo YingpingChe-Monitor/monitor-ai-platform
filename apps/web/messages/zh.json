@@ -36,6 +36,7 @@
     "components": "控件仓库",
     "imagePreview": "图片预览",
     "pdfPreview": "PDF 预览",
+    "generalRegistration": "通用登记",
     "userManagement": "用户管理"
   },
   "PdfPreview": {

@@ -20,7 +20,12 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronRightIcon, TerminalSquareIcon, BlocksIcon, UsersIcon } from "lucide-react"
+import {
+  ChevronRightIcon,
+  TerminalSquareIcon,
+  BlocksIcon,
+  ClipboardListIcon,
+} from "lucide-react"
 
 // Menu structure is built from the i18n dictionary — template-ready.
 // Active state is derived from the current pathname (usePathname): the
@@ -54,10 +59,12 @@ export function NavMain() {
       ],
     },
     {
-      title: t("userManagement"),
-      url: "/user-management",
-      icon: <UsersIcon />,
-      items: [],
+      title: t("generalRegistration"),
+      url: "#",
+      icon: <ClipboardListIcon />,
+      items: [
+        { title: t("userManagement"), url: "/general-registration/user-management" },
+      ],
     },
   ]
 
@@ -69,27 +76,6 @@ export function NavMain() {
           const groupActive = item.items?.some(
             (subItem) => subItem.url !== "#" && pathname === subItem.url
           )
-          // Leaf item (no children): render a direct link instead of a
-          // collapsible group — active state derives from the pathname.
-          if (!item.items || item.items.length === 0) {
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  tooltip={item.title}
-                  isActive={pathname === item.url}
-                  render={
-                    <Link
-                      href={item.url}
-                      onClick={() => setOpenMobile(false)}
-                    />
-                  }
-                >
-                  {item.icon}
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )
-          }
           return (
             <Collapsible
               key={item.title}
