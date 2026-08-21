@@ -402,7 +402,7 @@ export function UserManagementMembers({
                         {user.role === "superadmin" && t("roleSuperadmin")}
                         {user.role === "internal" &&
                           (user.department
-                            ? t(`department${capitalize(user.department)}`)
+                            ? t(departmentLabelKey(user.department))
                             : t("roleInternal"))}
                         {user.role === "customer-pm" && t("roleCustomerPm")}
                         {user.role === "key-user" && t("roleKeyUser")}
@@ -471,6 +471,10 @@ export function UserManagementMembers({
   )
 }
 
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1)
+// "after-sales" -> "departmentAfterSales" (kebab-case to the i18n key).
+function departmentLabelKey(department: InternalDepartment) {
+  return `department${department
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("")}`
 }
