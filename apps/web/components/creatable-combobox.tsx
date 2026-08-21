@@ -1,31 +1,31 @@
 "use client"
 
 import * as React from "react"
-import { CheckIcon, PlusIcon } from "lucide-react"
+import { PlusIcon } from "lucide-react"
 
-import { Input } from "@/components/ui/input"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox"
 
 export type ComboboxOption = { value: string; label: string }
 
-// Searchable combobox with free-form input:
-// - typing filters the options (substring, case-insensitive)
+// Searchable combobox with free-form input, built on the official Base UI
+// Combobox (via the shadcn base-nova wrapper in components/ui/combobox.tsx).
+// - typing filters the options (tokenized: every whitespace-separated token
+//   must match — "华 信" matches 华信科技, not the literal "华 信")
 // - clicking an option selects it (value + label)
 // - with `allowCreate`, a non-matching input shows a "create" affordance and
 //   keeps the typed text as a free-form value (the parent decides whether to
 //   actually create the entity — e.g. a confirm dialog on submit)
-// - without `allowCreate` (filters), non-matching input just shows
-//   `emptyText`
+// - without `allowCreate` (filters), non-matching input just shows `emptyText`
 //
-// Deliberately NOT built on cmdk: the Command component steals the Space key
-// while its popup is open (it uses Space to select the highlighted item),
-// which breaks typing anything with spaces in the input. A plain list keeps
-// all keystrokes in the input.
+// Focus management (caret staying in the input after selection) is handled by
+// Base UI itself — no manual refocusing needed.
 export function CreatableCombobox({
   options,
   value,
@@ -52,115 +52,101 @@ export function CreatableCombobox({
   className?: string
 }) {
   const [open, setOpen] = React.useState(false)
-  const [query, setQuery] = React.useState("")
-  const selected = options.find((o) => o.value === value)
-  // `text` is the displayed value (parent-controlled); `query` is what the
-  // user is actively typing — filtering must only use the latter, otherwise
-  // opening a filter that already has a selection would filter by the
-  // selected label and show a single row.
-  //
-  // Tokenized search: split the query on whitespace and require EVERY token
-  // to be a substring of the label. "华 信" matches 华信科技 (contains both
-  // 华 and 信), not just labels containing the literal "华 信".
-  const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
-  const filtered = tokens.length
-    ? options.filter((o) => {
-        const label = o.label.toLowerCase()
-        return tokens.every((tok) => label.includes(tok))
-      })
-    : options
+  const labelByValue = React.useMemo(() => {
+    const map = new Map<string, string>()
+    for (const o of options) map.set(o.value, o.label)
+    return map
+  }, [options])
 
-  function handleOpenChange(next: boolean) {
-    setOpen(next)
-    // Reset the filter when the dropdown closes so the next open shows all
-    // options (opening mid-typing must NOT reset, so this only runs on close).
-    if (!next) setQuery("")
+  // Object values ({ value, label } shape) — Base UI resolves labels/values
+  // automatically from that shape. The selected record must be referentially
+  // the same as the item rendered in the list for default equality to hold.
+  const selected = options.find((o) => o.value === value) ?? null
+
+  // Tokenized filtering: every whitespace-separated token of the query must
+  // be a substring of the option label.
+  const filter = React.useCallback(
+    (item: ComboboxOption, query: string) => {
+      const label = item.label ?? String(item)
+      const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
+      if (tokens.length === 0) return true
+      const l = label.toLowerCase()
+      return tokens.every((tok) => l.includes(tok))
+    },
+    []
+  )
+
+  function handleValueChange(next: ComboboxOption | null) {
+    // Selecting an option: keep value + input text in sync.
+    const id = next?.value ?? ""
+    onValueChange(id)
+    onTextChange(id ? (labelByValue.get(id) ?? "") : "")
   }
 
-  function handleTextChange(next: string) {
+  function handleInputChange(
+    next: string,
+    eventDetails?: { reason?: string }
+  ) {
+    // Only real user typing may update the free-form text. Base UI also calls
+    // onInputValueChange when it syncs the input to the selected label after
+    // close (reason: none / input-clear / item-press) — honouring those would
+    // wipe a free-form value that matches no option the moment the popup
+    // closes.
+    const reason = eventDetails?.reason
+    if (
+      reason &&
+      reason !== "input-change" &&
+      reason !== "input-paste"
+    ) {
+      return
+    }
     onTextChange(next)
-    setQuery(next)
     // Diverging from the selected option drops the selection, so the parent
     // treats the typed text as a free-form value.
-    if (selected && next !== selected.label) onValueChange("")
-    // Typing opens the dropdown (click-to-open is handled by the trigger).
-    setOpen(true)
-  }
-
-  function handleSelect(option: ComboboxOption) {
-    onValueChange(option.value)
-    onTextChange(option.label)
-    setQuery("")
-    setOpen(false)
+    const selectedLabel = value ? labelByValue.get(value) : undefined
+    if (selectedLabel !== undefined && next !== selectedLabel) onValueChange("")
   }
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      {/* The trigger renders a wrapping div, NOT the input itself: Base UI's
-          button semantics would otherwise land on the <input> — with
-          nativeButton=true it forces type="button" (can't type at all) and
-          with nativeButton=false it steals the Space key (button activation).
-          On the wrapper, keydown's target !== currentTarget, so typing is
-          untouched while clicks still toggle the dropdown.
-          Width comes from `className` on the wrapper (w-36 / w-40 / w-full…);
-          the input fills it. */}
-      <PopoverTrigger
-        nativeButton={false}
-        render={
-          <div className={cn("w-full", className)}>
-            <Input
-              value={text}
-              onChange={(e) => handleTextChange(e.target.value)}
-              placeholder={placeholder}
-              disabled={disabled}
-              aria-expanded={open}
-              role="combobox"
-            />
-          </div>
-        }
+    <Combobox
+      items={options}
+      value={selected}
+      onValueChange={handleValueChange}
+      inputValue={text}
+      onInputValueChange={handleInputChange}
+      open={open}
+      onOpenChange={setOpen}
+      filter={filter}
+      autoHighlight
+    >
+      <ComboboxInput
+        placeholder={placeholder}
+        disabled={disabled}
+        className={className}
       />
-      <PopoverContent
-        align="start"
-        sideOffset={4}
-        className="min-w-(--anchor-width) p-1"
-      >
-        {filtered.length > 0 ? (
-          <ul className="no-scrollbar max-h-72 overflow-y-auto p-1">
-            {filtered.map((option) => (
-              <li key={option.value}>
-                <button
-                  type="button"
-                  onClick={() => handleSelect(option)}
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
-                    option.value === value && "text-foreground"
-                  )}
-                >
-                  <span className="flex-1 truncate">{option.label}</span>
-                  {option.value === value && (
-                    <CheckIcon className="size-4 shrink-0 text-primary" />
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="py-6 text-center text-sm text-muted-foreground">
-            {allowCreate && text.trim() ? (
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 text-primary"
-                onClick={() => setOpen(false)}
-              >
-                <PlusIcon className="size-4" />
-                {createLabel?.(text.trim())}
-              </button>
-            ) : (
-              emptyText
-            )}
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
+      <ComboboxContent>
+        <ComboboxEmpty>
+          {allowCreate && text.trim() ? (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 text-primary"
+              onClick={() => setOpen(false)}
+            >
+              <PlusIcon className="size-4" />
+              {createLabel?.(text.trim())}
+            </button>
+          ) : (
+            emptyText
+          )}
+        </ComboboxEmpty>
+        <ComboboxList>
+          {(item: ComboboxOption) => (
+            <ComboboxItem key={item.value} value={item}>
+              {item.label}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   )
 }
