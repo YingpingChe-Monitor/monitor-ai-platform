@@ -51,6 +51,7 @@ export function NavMain() {
       items: [
         { title: t("imagePreview"), url: "/components/image-preview" },
         { title: t("pdfPreview"), url: "/components/pdf-preview" },
+        { title: t("autocomplete"), url: "/components/autocomplete" },
       ],
     },
   ]

@@ -34,7 +34,8 @@
     "cards": "组件卡片",
     "components": "控件仓库",
     "imagePreview": "图片预览",
-    "pdfPreview": "PDF 预览"
+    "pdfPreview": "PDF 预览",
+    "autocomplete": "自动补全"
   },
   "PdfPreview": {
     "title": "PDF 预览",
@@ -120,5 +121,36 @@
       "release": { "title": "新版本发布", "content": "Monitor G5 平台 v2.1.0 已发布，查看更新日志", "time": "2 天前" },
       "backup": { "title": "备份完成", "content": "数据库每日备份已完成", "time": "3 天前" }
     }
+  },
+  "Autocomplete": {
+    "title": "自动补全",
+    "description": "下拉选择控件的五种形态：普通单选、普通多选、单选模糊搜索、多选模糊搜索、多选模糊搜索并可输入创建",
+    "singleSelectTitle": "普通单选（不带搜索）",
+    "singleSelectDescription": "Select 基础单选，直接点选，无搜索框",
+    "multiSelectTitle": "普通多选（不带搜索）",
+    "multiSelectDescription": "Select 多选，点选多个选项，无搜索框",
+    "singleSearchTitle": "单选 + 模糊搜索",
+    "singleSearchDescription": "输入即过滤，支持分词匹配（如输入「py thon」匹配 Python）",
+    "multiSearchTitle": "多选 + 模糊搜索",
+    "multiSearchDescription": "多选标签（chips），输入即过滤，支持分词匹配",
+    "multiCreateTitle": "多选 + 模糊搜索 + 输入创建",
+    "multiCreateDescription": "多选标签，输入不存在的名称可创建新选项并加入（参考用户管理邀请页签的「所属客户」）",
+    "selectPlaceholder": "请选择…",
+    "searchPlaceholder": "输入以搜索…",
+    "createSearchPlaceholder": "输入以搜索或创建…",
+    "noMatches": "无匹配结果",
+    "create": "创建 “{text}”",
+    "currentValue": "当前值：",
+    "emptyValue": "未选择",
+    "optReact": "React",
+    "optVue": "Vue",
+    "optAngular": "Angular",
+    "optSvelte": "Svelte",
+    "optSolid": "Solid",
+    "optTypescript": "TypeScript",
+    "optJavascript": "JavaScript",
+    "optPython": "Python",
+    "optRust": "Rust",
+    "optGo": "Go"
   }
 }

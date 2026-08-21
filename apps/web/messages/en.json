@@ -34,7 +34,8 @@
     "cards": "Cards",
     "components": "Components",
     "imagePreview": "Image Preview",
-    "pdfPreview": "PDF Preview"
+    "pdfPreview": "PDF Preview",
+    "autocomplete": "Autocomplete"
   },
   "PdfPreview": {
     "title": "PDF Preview",
@@ -120,5 +121,36 @@
       "release": { "title": "New release", "content": "Monitor G5 Platform v2.1.0 is out — check the changelog", "time": "2 days ago" },
       "backup": { "title": "Backup complete", "content": "Daily database backup finished", "time": "3 days ago" }
     }
+  },
+  "Autocomplete": {
+    "title": "Autocomplete",
+    "description": "Five flavors of dropdown selection: plain single, plain multi, single with fuzzy search, multi with fuzzy search, and multi with fuzzy search plus type-to-create",
+    "singleSelectTitle": "Plain single select (no search)",
+    "singleSelectDescription": "Basic Select, pick one option, no search box",
+    "multiSelectTitle": "Plain multi select (no search)",
+    "multiSelectDescription": "Select multiple options, no search box",
+    "singleSearchTitle": "Single + fuzzy search",
+    "singleSearchDescription": "Type to filter, tokenized matching (e.g. \"py thon\" matches Python)",
+    "multiSearchTitle": "Multi + fuzzy search",
+    "multiSearchDescription": "Multi-select chips, type to filter, tokenized matching",
+    "multiCreateTitle": "Multi + fuzzy search + type-to-create",
+    "multiCreateDescription": "Multi-select chips; typing a name that doesn't exist creates it (same as the customer picker on the invite tab of User Management)",
+    "selectPlaceholder": "Select…",
+    "searchPlaceholder": "Type to search…",
+    "createSearchPlaceholder": "Type to search or create…",
+    "noMatches": "No matches",
+    "create": "Create \u201c{text}\u201d",
+    "currentValue": "Current value:",
+    "emptyValue": "Nothing selected",
+    "optReact": "React",
+    "optVue": "Vue",
+    "optAngular": "Angular",
+    "optSvelte": "Svelte",
+    "optSolid": "Solid",
+    "optTypescript": "TypeScript",
+    "optJavascript": "JavaScript",
+    "optPython": "Python",
+    "optRust": "Rust",
+    "optGo": "Go"
   }
 }
