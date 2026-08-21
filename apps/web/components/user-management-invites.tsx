@@ -332,7 +332,13 @@ export function UserManagementInvites({ session }: { session: Session }) {
                   onValueChange={(v) => setRole((v ?? "") as typeof role)}
                 >
                   <SelectTrigger id="inv-role" className="w-full">
-                    <SelectValue placeholder={t("inviteRolePlaceholder")} />
+                    {/* Format the selected value back to its display label —
+                        base-ui SelectValue renders the raw value otherwise. */}
+                    <SelectValue placeholder={t("inviteRolePlaceholder")}>
+                      {(v: string | null) =>
+                        v ? t(inviteRoleLabelKey(v as Invite["role"])) : null
+                      }
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {invitableRoles.map((r) => (
