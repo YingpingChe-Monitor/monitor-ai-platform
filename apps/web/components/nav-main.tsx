@@ -25,6 +25,7 @@ import {
   TerminalSquareIcon,
   BlocksIcon,
   ClipboardListIcon,
+  Building2Icon,
 } from "lucide-react"
 
 // Menu structure is built from the i18n dictionary — template-ready.
@@ -66,6 +67,12 @@ export function NavMain() {
       items: [
         { title: t("userManagement"), url: "/general-registration/user-management" },
       ],
+    },
+    {
+      title: t("sales"),
+      url: "#",
+      icon: <Building2Icon />,
+      items: [{ title: t("customers"), url: "/sales/customers" }],
     },
   ]
 
