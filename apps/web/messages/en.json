@@ -394,6 +394,7 @@
     "readOnlyHint": "You can only view customers you belong to (read-only)",
     "backToMyCustomer": "Back to my customer",
     "notFoundTitle": "Customer not found",
-    "notFoundDesc": "This customer does not exist or has been removed"
+    "notFoundDesc": "This customer does not exist or has been removed",
+    "errorNameDuplicate": "This customer name already exists — please use a different one"
   }
 }

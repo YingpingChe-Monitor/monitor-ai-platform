@@ -49,9 +49,10 @@ import { Textarea } from "@/components/ui/textarea"
 
 // Per-field error map: every violated rule is reported at once on submit,
 // and a field's error clears as soon as its input changes. Only the name is
-// required; phone/email are optional but format-checked when filled.
+// required; phone/email are optional but format-checked when filled. The
+// name must also be unique (trimmed, case-insensitive) across all customers.
 type FieldErrors = {
-  name?: "required"
+  name?: "required" | "duplicate"
   phone?: "invalid"
   email?: "invalid"
 }
@@ -85,7 +86,7 @@ export function CustomersForm({
   customers,
   id: editingId,
 }: {
-  customers?: CustomerRecord[]
+  customers: CustomerRecord[]
   id?: string
 }) {
   const t = useTranslations("Customers")
@@ -110,7 +111,7 @@ export function CustomersForm({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     const s = getSession()
     setSession(s)
-    if (editingId && customers) {
+    if (editingId) {
       const record = getAllCustomers(customers).find((c) => c.id === editingId) ?? null
       setInitial(record)
       if (record) {
@@ -187,7 +188,14 @@ export function CustomersForm({
 
     // Validate everything at once so all violations are shown together.
     const next: FieldErrors = {}
-    if (!name.trim()) next.name = "required"
+    const trimmedName = name.trim()
+    if (!trimmedName) next.name = "required"
+    else {
+      const taken = getAllCustomers(customers).some(
+        (c) => c.id !== editingId && c.name.trim().toLowerCase() === trimmedName.toLowerCase()
+      )
+      if (taken) next.name = "duplicate"
+    }
     const trimmedPhone = phone.trim()
     const phoneDigits = trimmedPhone.replace(/[\s-]/g, "")
     if (trimmedPhone && !PHONE_PATTERNS.some((pattern) => pattern.test(phoneDigits))) {
@@ -262,6 +270,11 @@ export function CustomersForm({
                   {errors.name === "required" && (
                     <FieldDescription className="text-destructive">
                       {t("errorNameRequired")}
+                    </FieldDescription>
+                  )}
+                  {errors.name === "duplicate" && (
+                    <FieldDescription className="text-destructive">
+                      {t("errorNameDuplicate")}
                     </FieldDescription>
                   )}
                 </Field>

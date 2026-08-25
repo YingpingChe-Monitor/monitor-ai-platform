@@ -394,6 +394,7 @@
     "readOnlyHint": "您只能查看所属客户的信息（只读）",
     "backToMyCustomer": "返回我的客户",
     "notFoundTitle": "未找到该客户",
-    "notFoundDesc": "该客户不存在或已被删除"
+    "notFoundDesc": "该客户不存在或已被删除",
+    "errorNameDuplicate": "客户名称已存在，请更换其他名称"
   }
 }
