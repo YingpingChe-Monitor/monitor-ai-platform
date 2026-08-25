@@ -37,7 +37,8 @@
     "imagePreview": "Image Preview",
     "pdfPreview": "PDF Preview",
     "generalRegistration": "General Registration",
-    "userManagement": "User Management"
+    "userManagement": "User Management",
+    "autocomplete": "Autocomplete"
   },
   "PdfPreview": {
     "title": "PDF Preview",
@@ -116,12 +117,36 @@
     "columnContent": "Content",
     "columnTime": "Time",
     "items": {
-      "maintenance": { "title": "System maintenance", "content": "Scheduled maintenance tonight 23:00–23:30", "time": "10 min ago" },
-      "passwordChanged": { "title": "Password changed", "content": "Your account password was updated successfully", "time": "1 hour ago" },
-      "diskSpace": { "title": "Low disk space", "content": "Server disk usage is above 85%, please clean up", "time": "3 hours ago" },
-      "connectionLost": { "title": "Connection lost", "content": "Connection to the production line device was interrupted, retrying", "time": "yesterday" },
-      "release": { "title": "New release", "content": "Monitor G5 Platform v2.1.0 is out — check the changelog", "time": "2 days ago" },
-      "backup": { "title": "Backup complete", "content": "Daily database backup finished", "time": "3 days ago" }
+      "maintenance": {
+        "title": "System maintenance",
+        "content": "Scheduled maintenance tonight 23:00–23:30",
+        "time": "10 min ago"
+      },
+      "passwordChanged": {
+        "title": "Password changed",
+        "content": "Your account password was updated successfully",
+        "time": "1 hour ago"
+      },
+      "diskSpace": {
+        "title": "Low disk space",
+        "content": "Server disk usage is above 85%, please clean up",
+        "time": "3 hours ago"
+      },
+      "connectionLost": {
+        "title": "Connection lost",
+        "content": "Connection to the production line device was interrupted, retrying",
+        "time": "yesterday"
+      },
+      "release": {
+        "title": "New release",
+        "content": "Monitor G5 Platform v2.1.0 is out — check the changelog",
+        "time": "2 days ago"
+      },
+      "backup": {
+        "title": "Backup complete",
+        "content": "Daily database backup finished",
+        "time": "3 days ago"
+      }
     }
   },
   "UserManagement": {
@@ -134,7 +159,7 @@
     "sessionRefreshed": "Session renewed automatically",
     "refreshHintTitle": "Auto session refresh",
     "refreshHint": "Expired tokens renew silently; if renewal fails you are signed out.",
-    "refreshHintDetail": "Click \u201cSimulate expiry\u201d to demo it live: the session expires and renews instantly, work continues uninterrupted (story #8).",
+    "refreshHintDetail": "Click “Simulate expiry” to demo it live: the session expires and renews instantly, work continues uninterrupted (story #8).",
     "searchPlaceholder": "Search name, username or email…",
     "filterRole": "Filter by role",
     "filterProject": "Filter by project",
@@ -225,10 +250,10 @@
     "revoke": "Revoke",
     "emptyInvites": "No invitations yet",
     "comboboxEmpty": "No matches",
-    "comboboxCreate": "Create \u201c{text}\u201d",
+    "comboboxCreate": "Create “{text}”",
     "confirmCreateTitle": "Confirm creation",
-    "confirmCreateCustomer": "Customer \u201c{name}\u201d does not exist yet. Confirming will create the customer with its default project \u201c{project}\u201d and continue with the invitation.",
-    "confirmCreateProject": "Project \u201c{name}\u201d does not exist under customer \u201c{customer}\u201d. Confirming will create it and continue with the invitation.",
+    "confirmCreateCustomer": "Customer “{name}” does not exist yet. Confirming will create the customer with its default project “{project}” and continue with the invitation.",
+    "confirmCreateProject": "Project “{name}” does not exist under customer “{customer}”. Confirming will create it and continue with the invitation.",
     "similarCustomersHint": "Similar existing customers detected: {names}. Create a new customer anyway?",
     "confirmCreateButton": "Confirm & invite",
     "cancel": "Cancel",
@@ -268,5 +293,36 @@
     "errorUsed": "This invitation has already been used",
     "errorExpired": "This invitation has expired",
     "errorRevoked": "This invitation has been revoked"
+  },
+  "Autocomplete": {
+    "title": "Autocomplete",
+    "description": "Five flavors of dropdown selection: plain single, plain multi, single with fuzzy search, multi with fuzzy search, and multi with fuzzy search plus type-to-create",
+    "singleSelectTitle": "Plain single select (no search)",
+    "singleSelectDescription": "Basic Select, pick one option, no search box",
+    "multiSelectTitle": "Plain multi select (no search)",
+    "multiSelectDescription": "Select multiple options, no search box",
+    "singleSearchTitle": "Single + fuzzy search",
+    "singleSearchDescription": "Type to filter, tokenized matching (e.g. \"py thon\" matches Python)",
+    "multiSearchTitle": "Multi + fuzzy search",
+    "multiSearchDescription": "Multi-select chips, type to filter, tokenized matching",
+    "multiCreateTitle": "Multi + fuzzy search + type-to-create",
+    "multiCreateDescription": "Multi-select chips; typing a name that doesn't exist creates it (same as the customer picker on the invite tab of User Management)",
+    "selectPlaceholder": "Select…",
+    "searchPlaceholder": "Type to search…",
+    "createSearchPlaceholder": "Type to search or create…",
+    "noMatches": "No matches",
+    "create": "Create “{text}”",
+    "currentValue": "Current value:",
+    "emptyValue": "Nothing selected",
+    "optReact": "React",
+    "optVue": "Vue",
+    "optAngular": "Angular",
+    "optSvelte": "Svelte",
+    "optSolid": "Solid",
+    "optTypescript": "TypeScript",
+    "optJavascript": "JavaScript",
+    "optPython": "Python",
+    "optRust": "Rust",
+    "optGo": "Go"
   }
 }

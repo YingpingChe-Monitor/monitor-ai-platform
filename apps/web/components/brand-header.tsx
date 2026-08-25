@@ -42,6 +42,8 @@ export function BrandHeader() {
               />
             }
           >
+            {/* Circular mark only — the horizontal lockup doesn't fit the
+                collapsed 40px rail. */}
             <img
               src="/logo-sm.png"
               alt={t("name")}

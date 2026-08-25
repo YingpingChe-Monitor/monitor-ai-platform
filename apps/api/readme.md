@@ -1,66 +1,16 @@
-# Modern TypeScript Project Setup
+# Monitor Adaptation API
 
-A step-by-step guide to setting up a modern npm and TypeScript project from scratch.
+TypeScript API starter for the Monitor Adaptation Platform.
 
-## Step 1: Initialize npm
+**Status: not a server yet** — `src/index.ts` prints `Hello, TypeScript!` and exits. No framework, no HTTP port, no dependencies.
 
-```bash
-npm init -y
-```
-
-Creates a `package.json` with default values.
-
-## Step 2: Install TypeScript
+## Scripts
 
 ```bash
-npm install -D typescript @types/node tsx
+npm run dev    # tsx src/index.ts — prints once and exits
+npm run build  # tsc → dist/
+npm start      # node dist/index.js
+npm test       # vitest (no test files yet)
 ```
 
-- `typescript` - The TypeScript compiler
-- `@types/node` - Type definitions for Node.js
-- `tsx` - Fast TypeScript executor (alternative to ts-node)
-
-## Step 3: Initialize TypeScript
-
-```bash
-npx tsc --init
-```
-
-Creates `tsconfig.json` with recommended compiler options.
-
-## Step 4: Configure package.json
-
-Add scripts for development:
-
-```json
-{
-  "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
-  }
-}
-```
-
-## Step 5: Create source directory
-
-```bash
-mkdir src
-# Create src/index.ts with your editor and add:
-# console.log("Hello, TypeScript!");
-```
-
-## Step 6: Create .gitignore
-
-```bash
-# Create .gitignore with your editor and add:
-node_modules
-dist
-.env
-```
-
-## Run the project
-
-```bash
-npm run dev
-```
+See the repository root `CONTEXT.md` for project conventions.
