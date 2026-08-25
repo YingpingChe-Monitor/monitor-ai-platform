@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { ArrowLeftIcon, PencilIcon, PlusIcon } from "lucide-react"
+import { toast } from "sonner"
+import { ArrowLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react"
 
 import { getSession, type Session } from "@/lib/auth"
 import { getCustomerAccess } from "@/lib/customer-access"
-import { getAllCustomers } from "@/lib/customers-store"
+import { deleteCustomer, getAllCustomers } from "@/lib/customers-store"
 import { PageContainer, PageGrid } from "@/components/page-container"
 import {
   INDUSTRY_LABELS,
@@ -23,6 +25,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 /**
  * Full-page customer detail: info card (main) + overview card (aside).
@@ -39,9 +49,12 @@ export function CustomersDetail({
   id: string
 }) {
   const t = useTranslations("Customers")
+  const router = useRouter()
 
   const [session, setSession] = useState<Session | null>(null)
   const [record, setRecord] = useState<CustomerRecord | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState(false)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -96,6 +109,18 @@ export function CustomersDetail({
     )
   }
 
+  function handleDelete() {
+    if (!record) return
+    const result = deleteCustomer(record.id)
+    if (!result.ok) {
+      setDeleteError(true)
+      return
+    }
+    toast.success(t("deleteSuccess"))
+    setDeleteOpen(false)
+    router.push("/sales/customers")
+  }
+
   return (
     <PageContainer>
       <div className="flex flex-col gap-1">
@@ -128,6 +153,16 @@ export function CustomersDetail({
                 <Button nativeButton={false} render={<Link href={`/sales/customers/${record.id}/edit`} />}>
                   <PencilIcon data-icon="inline-start" />
                   {t("edit")}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    setDeleteError(false)
+                    setDeleteOpen(true)
+                  }}
+                >
+                  <Trash2Icon data-icon="inline-start" />
+                  {t("delete")}
                 </Button>
               </div>
             )}
@@ -169,6 +204,35 @@ export function CustomersDetail({
           </CardContent>
         </Card>
       </PageGrid>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("deleteConfirmTitle")}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <DialogDescription>
+              {t("deleteConfirmName", { name: record.name })}
+            </DialogDescription>
+            <DialogDescription>
+              {deleteError ? (
+                <span className="text-destructive">{t("deleteBlocked")}</span>
+              ) : (
+                t("deleteConfirmDesc")
+              )}
+            </DialogDescription>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              <Trash2Icon data-icon="inline-start" />
+              {t("confirmDelete")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   )
 }

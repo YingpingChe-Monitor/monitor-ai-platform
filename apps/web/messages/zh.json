@@ -395,6 +395,14 @@
     "backToMyCustomer": "返回我的客户",
     "notFoundTitle": "未找到该客户",
     "notFoundDesc": "该客户不存在或已被删除",
-    "errorNameDuplicate": "客户名称已存在，请更换其他名称"
+    "errorNameDuplicate": "客户名称已存在，请更换其他名称",
+    "delete": "删除",
+    "deleteConfirmTitle": "删除客户",
+    "deleteConfirmDesc": "删除后该客户的档案将无法恢复",
+    "deleteConfirmName": "确定删除「{name}」吗？",
+    "cancel": "取消",
+    "confirmDelete": "确认删除",
+    "deleteSuccess": "客户已删除",
+    "deleteBlocked": "该客户已关联用户或项目，不允许删除"
   }
 }
