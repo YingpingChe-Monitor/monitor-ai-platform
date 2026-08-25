@@ -1,11 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
-import { Loader2Icon } from "lucide-react"
+import { ArrowLeftIcon, Loader2Icon } from "lucide-react"
 
-import { PageContainer, PageGrid } from "@/components/page-container"
+import { getSession, type Session } from "@/lib/auth"
+import { getCustomerAccess } from "@/lib/customer-access"
+import { createCustomer, getAllCustomers, updateCustomer } from "@/lib/customers-store"
+import { PageContainer } from "@/components/page-container"
+import {
+  INDUSTRIES,
+  REGIONS,
+  SOURCES,
+  INDUSTRY_LABELS,
+  REGION_LABELS,
+  SOURCE_LABELS,
+  type CustomerRecord,
+  type Industry,
+  type Region,
+  type Source,
+} from "@/components/customers-data"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -30,331 +47,355 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-const INDUSTRIES = ["manufacturing", "energy", "finance", "other"] as const
-const REGIONS = ["east", "south", "north", "southwest", "other"] as const
-const SOURCES = ["online", "exhibition", "referral", "self"] as const
-
-type Industry = (typeof INDUSTRIES)[number]
-type Region = (typeof REGIONS)[number]
-type Source = (typeof SOURCES)[number]
-
-// Base UI Select yields `string | null` — wrap every onValueChange with ?? "".
-type FormError =
-  | "name-required"
-  | "contact-required"
-  | "phone-required"
-  | "phone-invalid"
-  | "email-required"
-  | "email-invalid"
-  | null
-
-const INDUSTRY_LABELS: Record<Industry, string> = {
-  manufacturing: "industryManufacturing",
-  energy: "industryEnergy",
-  finance: "industryFinance",
-  other: "industryOther",
+// Per-field error map: every violated rule is reported at once on submit,
+// and a field's error clears as soon as its input changes. Only the name is
+// required; phone/email are optional but format-checked when filled.
+type FieldErrors = {
+  name?: "required"
+  phone?: "invalid"
+  email?: "invalid"
 }
 
-const REGION_LABELS: Record<Region, string> = {
-  east: "regionEast",
-  south: "regionSouth",
-  north: "regionNorth",
-  southwest: "regionSouthwest",
-  other: "regionOther",
+// Phone formats (China): 11-digit mobile starting 1[3-9], or landline with an
+// 0-prefixed area code + 7-8 digit number. Optional +86/86 prefix; spaces and
+// dashes are tolerated as separators (stripped before matching).
+const PHONE_PATTERNS = [
+  /^(?:\+?86)?1[3-9]\d{9}$/,
+  /^(?:\+?86)?0\d{2,3}\d{7,8}$/,
+]
+
+const EMPTY = {
+  name: "",
+  contact: "",
+  phone: "",
+  email: "",
+  industry: "" as Industry | "",
+  region: "" as Region | "",
+  source: "" as Source | "",
+  address: "",
 }
 
-const SOURCE_LABELS: Record<Source, string> = {
-  online: "sourceOnline",
-  exhibition: "sourceExhibition",
-  referral: "sourceReferral",
-  self: "sourceSelf",
-}
-
-type SubmittedCustomer = {
-  name: string
-  contact: string
-  phone: string
-  email: string
-  industry: Industry | ""
-  region: Region | ""
-  source: Source | ""
-  address: string
-}
-
-export function CustomersForm() {
+/**
+ * Create / edit form for a customer record. With `id` (plus the seed for
+ * resolution) → edit mode, prefilled from the mock store, submit saves and
+ * returns to the detail page; without → create mode, submit persists and
+ * opens the new customer's detail. Mock persistence: localStorage overrides.
+ */
+export function CustomersForm({
+  customers,
+  id: editingId,
+}: {
+  customers?: CustomerRecord[]
+  id?: string
+}) {
   const t = useTranslations("Customers")
+  const router = useRouter()
 
-  const [name, setName] = useState("")
-  const [contact, setContact] = useState("")
-  const [phone, setPhone] = useState("")
-  const [email, setEmail] = useState("")
-  const [industry, setIndustry] = useState<Industry | "">("")
-  const [region, setRegion] = useState<Region | "">("")
-  const [source, setSource] = useState<Source | "">("")
-  const [address, setAddress] = useState("")
-  const [error, setError] = useState<FormError>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [initial, setInitial] = useState<CustomerRecord | null>(null)
+  const [name, setName] = useState(EMPTY.name)
+  const [contact, setContact] = useState(EMPTY.contact)
+  const [phone, setPhone] = useState(EMPTY.phone)
+  const [email, setEmail] = useState(EMPTY.email)
+  const [industry, setIndustry] = useState<Industry | "">(EMPTY.industry)
+  const [region, setRegion] = useState<Region | "">(EMPTY.region)
+  const [source, setSource] = useState<Source | "">(EMPTY.source)
+  const [address, setAddress] = useState(EMPTY.address)
+  const [errors, setErrors] = useState<FieldErrors>({})
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState<SubmittedCustomer | null>(null)
+
+  useEffect(() => {
+    // Reading localStorage is an external-system check that can only run
+    // client-side; flipping these flags here is intentional.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    const s = getSession()
+    setSession(s)
+    if (editingId && customers) {
+      const record = getAllCustomers(customers).find((c) => c.id === editingId) ?? null
+      setInitial(record)
+      if (record) {
+        setName(record.name)
+        setContact(record.contact)
+        setPhone(record.phone)
+        setEmail(record.email)
+        setIndustry(record.industry)
+        setRegion(record.region)
+        setSource(record.source)
+        setAddress(record.address)
+      }
+    }
+  }, [])
+
+  if (!session) return null
+  const access = getCustomerAccess(session)
+
+  if (editingId && !initial) {
+    return (
+      <PageContainer>
+        <Card className="mx-auto w-full max-w-2xl">
+          <CardHeader>
+            <CardTitle className="text-2xl">{t("notFoundTitle")}</CardTitle>
+            <CardDescription>{t("notFoundDesc")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              nativeButton={false}
+              variant="outline"
+              render={<Link href="/sales/customers" />}
+            >
+              <ArrowLeftIcon data-icon="inline-start" />
+              {t("backToList")}
+            </Button>
+          </CardContent>
+        </Card>
+      </PageContainer>
+    )
+  }
+
+  if (!access.canManageAll) {
+    const ownId = session.user.customerId
+    return (
+      <PageContainer>
+        <Card className="mx-auto w-full max-w-2xl">
+          <CardHeader>
+            <CardTitle className="text-2xl">{t("noPermissionTitle")}</CardTitle>
+            <CardDescription>
+              {editingId ? t("noPermissionEdit") : t("noPermissionCreate")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              nativeButton={false}
+              variant="outline"
+              render={<Link href={ownId ? `/sales/customers/${ownId}` : "/sales/customers"} />}
+            >
+              <ArrowLeftIcon data-icon="inline-start" />
+              {t("backToMyCustomer")}
+            </Button>
+          </CardContent>
+        </Card>
+      </PageContainer>
+    )
+  }
+
+  function clearFieldError(field: keyof FieldErrors) {
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev))
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) {
-      setError("name-required")
-      return
-    }
-    if (!contact.trim()) {
-      setError("contact-required")
-      return
-    }
+
+    // Validate everything at once so all violations are shown together.
+    const next: FieldErrors = {}
+    if (!name.trim()) next.name = "required"
     const trimmedPhone = phone.trim()
-    if (!trimmedPhone) {
-      setError("phone-required")
-      return
-    }
-    if (!/^\+?\d[\d\s-]{5,}$/.test(trimmedPhone)) {
-      setError("phone-invalid")
-      return
+    const phoneDigits = trimmedPhone.replace(/[\s-]/g, "")
+    if (trimmedPhone && !PHONE_PATTERNS.some((pattern) => pattern.test(phoneDigits))) {
+      next.phone = "invalid"
     }
     const trimmedEmail = email.trim()
-    if (!trimmedEmail) {
-      setError("email-required")
-      return
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) next.email = "invalid"
+
+    setErrors(next)
+    if (next.name || next.phone || next.email) return
+
+    const draft = {
+      name: name.trim(),
+      contact: contact.trim(),
+      phone: trimmedPhone,
+      email: trimmedEmail,
+      industry,
+      region,
+      source,
+      address: address.trim(),
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      setError("email-invalid")
-      return
-    }
-    setError(null)
+
     setSubmitting(true)
     // Small delay so the loading state is visible (mock submit is synchronous).
     window.setTimeout(() => {
       setSubmitting(false)
-      setSubmitted({
-        name: name.trim(),
-        contact: contact.trim(),
-        phone: trimmedPhone,
-        email: trimmedEmail,
-        industry,
-        region,
-        source,
-        address: address.trim(),
-      })
-      toast.success(t("success"))
+      if (editingId) {
+        updateCustomer(editingId, draft)
+        toast.success(t("saveSuccess"))
+        router.push(`/sales/customers/${editingId}`)
+      } else {
+        const record = createCustomer(draft)
+        toast.success(t("success"))
+        router.push(`/sales/customers/${record.id}`)
+      }
     }, 500)
   }
 
   return (
     <PageContainer>
-      <PageGrid>
-        {/* Form card — the aside result card is only shown after submission. */}
-        <Card className="@container/card">
-          <CardHeader>
-            <CardTitle className="text-2xl">{t("formTitle")}</CardTitle>
-            <CardDescription>{t("formDescription")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} noValidate>
-              <FieldGroup>
-                <div className="grid grid-cols-1 gap-4 @2xl/card:grid-cols-2">
-                  <Field data-invalid={error === "name-required"}>
-                    <FieldLabel htmlFor="cust-name">{t("name")}</FieldLabel>
-                    <Input
-                      id="cust-name"
-                      placeholder={t("namePlaceholder")}
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      aria-invalid={error === "name-required"}
-                    />
-                    {error === "name-required" && (
-                      <FieldDescription className="text-destructive">
-                        {t("errorNameRequired")}
-                      </FieldDescription>
-                    )}
-                  </Field>
-                  <Field data-invalid={error === "contact-required"}>
-                    <FieldLabel htmlFor="cust-contact">{t("contact")}</FieldLabel>
-                    <Input
-                      id="cust-contact"
-                      placeholder={t("contactPlaceholder")}
-                      value={contact}
-                      onChange={(e) => setContact(e.target.value)}
-                      aria-invalid={error === "contact-required"}
-                    />
-                    {error === "contact-required" && (
-                      <FieldDescription className="text-destructive">
-                        {t("errorContactRequired")}
-                      </FieldDescription>
-                    )}
-                  </Field>
-                  <Field data-invalid={error === "phone-required" || error === "phone-invalid"}>
-                    <FieldLabel htmlFor="cust-phone">{t("phone")}</FieldLabel>
-                    <Input
-                      id="cust-phone"
-                      type="tel"
-                      inputMode="numeric"
-                      placeholder={t("phonePlaceholder")}
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      aria-invalid={error === "phone-required" || error === "phone-invalid"}
-                    />
-                    {error === "phone-required" && (
-                      <FieldDescription className="text-destructive">
-                        {t("errorPhoneRequired")}
-                      </FieldDescription>
-                    )}
-                    {error === "phone-invalid" && (
-                      <FieldDescription className="text-destructive">
-                        {t("errorPhoneInvalid")}
-                      </FieldDescription>
-                    )}
-                  </Field>
-                  <Field data-invalid={error === "email-required" || error === "email-invalid"}>
-                    <FieldLabel htmlFor="cust-email">{t("email")}</FieldLabel>
-                    <Input
-                      id="cust-email"
-                      type="email"
-                      placeholder={t("emailPlaceholder")}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      aria-invalid={error === "email-required" || error === "email-invalid"}
-                    />
-                    {error === "email-required" && (
-                      <FieldDescription className="text-destructive">
-                        {t("errorEmailRequired")}
-                      </FieldDescription>
-                    )}
-                    {error === "email-invalid" && (
-                      <FieldDescription className="text-destructive">
-                        {t("errorEmailInvalid")}
-                      </FieldDescription>
-                    )}
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="cust-industry">{t("industry")}</FieldLabel>
-                    <Select
-                      value={industry || null}
-                      onValueChange={(v) => setIndustry((v ?? "") as Industry | "")}
-                    >
-                      <SelectTrigger id="cust-industry" className="w-full">
-                        <SelectValue placeholder={t("industryPlaceholder")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {INDUSTRIES.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {t(INDUSTRY_LABELS[item])}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="cust-region">{t("region")}</FieldLabel>
-                    <Select
-                      value={region || null}
-                      onValueChange={(v) => setRegion((v ?? "") as Region | "")}
-                    >
-                      <SelectTrigger id="cust-region" className="w-full">
-                        <SelectValue placeholder={t("regionPlaceholder")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {REGIONS.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {t(REGION_LABELS[item])}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field className="@2xl/card:col-span-2">
-                    <FieldLabel htmlFor="cust-source">{t("source")}</FieldLabel>
-                    <Select
-                      value={source || null}
-                      onValueChange={(v) => setSource((v ?? "") as Source | "")}
-                    >
-                      <SelectTrigger id="cust-source" className="w-full">
-                        <SelectValue placeholder={t("sourcePlaceholder")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SOURCES.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {t(SOURCE_LABELS[item])}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field className="@2xl/card:col-span-2">
-                    <FieldLabel htmlFor="cust-address">{t("address")}</FieldLabel>
-                    <Textarea
-                      id="cust-address"
-                      placeholder={t("addressPlaceholder")}
-                      rows={3}
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                    />
-                  </Field>
-                </div>
-                <Field>
-                  <Button type="submit" className="w-full" disabled={submitting}>
-                    {submitting ? (
-                      <>
-                        <Loader2Icon data-icon="inline-start" className="animate-spin" />
-                        {t("submitting")}
-                      </>
-                    ) : (
-                      t("submit")
-                    )}
-                  </Button>
+      {initial && (
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{t("editTitle")}</h1>
+          <p className="text-muted-foreground text-sm">
+            {initial.name} · {t("overviewId")}：{initial.id}
+          </p>
+        </div>
+      )}
+      <Card className="@container/card mx-auto w-full max-w-2xl">
+        <CardHeader>
+          <CardTitle className="text-2xl">{t("formTitle")}</CardTitle>
+          <CardDescription>
+            {editingId ? t("editDescription") : t("formDescription")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} noValidate>
+            <FieldGroup>
+              <div className="grid grid-cols-1 gap-4 @2xl/card:grid-cols-2">
+                <Field data-invalid={!!errors.name}>
+                  <FieldLabel htmlFor="cust-name">{t("name")}</FieldLabel>
+                  <Input
+                    id="cust-name"
+                    placeholder={t("namePlaceholder")}
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value)
+                      clearFieldError("name")
+                    }}
+                    aria-invalid={!!errors.name}
+                  />
+                  {errors.name === "required" && (
+                    <FieldDescription className="text-destructive">
+                      {t("errorNameRequired")}
+                    </FieldDescription>
+                  )}
                 </Field>
-              </FieldGroup>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Result card — mirrors the submitted values, stays empty until submit. */}
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle className="text-2xl">{t("resultTitle")}</CardTitle>
-            <CardDescription>
-              {submitted ? t("resultDescription") : t("resultPlaceholder")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {submitted ? (
-              <dl className="flex flex-col gap-3">
-                <ResultRow label={t("resultName")} value={submitted.name} />
-                <ResultRow label={t("resultContact")} value={submitted.contact} />
-                <ResultRow label={t("resultPhone")} value={submitted.phone} />
-                <ResultRow label={t("resultEmail")} value={submitted.email} />
-                <ResultRow
-                  label={t("resultIndustry")}
-                  value={submitted.industry ? t(INDUSTRY_LABELS[submitted.industry]) : t("empty")}
-                />
-                <ResultRow
-                  label={t("resultRegion")}
-                  value={submitted.region ? t(REGION_LABELS[submitted.region]) : t("empty")}
-                />
-                <ResultRow
-                  label={t("resultSource")}
-                  value={submitted.source ? t(SOURCE_LABELS[submitted.source]) : t("empty")}
-                />
-                <ResultRow label={t("resultAddress")} value={submitted.address || t("empty")} />
-              </dl>
-            ) : (
-              <p className="text-muted-foreground text-sm">{t("resultPlaceholder")}</p>
-            )}
-          </CardContent>
-        </Card>
-      </PageGrid>
+                <Field>
+                  <FieldLabel htmlFor="cust-contact">{t("contact")}</FieldLabel>
+                  <Input
+                    id="cust-contact"
+                    placeholder={t("contactPlaceholder")}
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
+                  />
+                </Field>
+                <Field data-invalid={!!errors.phone}>
+                  <FieldLabel htmlFor="cust-phone">{t("phone")}</FieldLabel>
+                  <Input
+                    id="cust-phone"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder={t("phonePlaceholder")}
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(e.target.value)
+                      clearFieldError("phone")
+                    }}
+                    aria-invalid={!!errors.phone}
+                  />
+                  {errors.phone === "invalid" && (
+                    <FieldDescription className="text-destructive">
+                      {t("errorPhoneInvalid")}
+                    </FieldDescription>
+                  )}
+                </Field>
+                <Field data-invalid={!!errors.email}>
+                  <FieldLabel htmlFor="cust-email">{t("email")}</FieldLabel>
+                  <Input
+                    id="cust-email"
+                    type="email"
+                    placeholder={t("emailPlaceholder")}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      clearFieldError("email")
+                    }}
+                    aria-invalid={!!errors.email}
+                  />
+                  {errors.email === "invalid" && (
+                    <FieldDescription className="text-destructive">
+                      {t("errorEmailInvalid")}
+                    </FieldDescription>
+                  )}
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="cust-industry">{t("industry")}</FieldLabel>
+                  <Select
+                    value={industry || null}
+                    onValueChange={(v) => setIndustry((v ?? "") as Industry | "")}
+                  >
+                    <SelectTrigger id="cust-industry" className="w-full">
+                      <SelectValue placeholder={t("industryPlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INDUSTRIES.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {t(INDUSTRY_LABELS[item])}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="cust-region">{t("region")}</FieldLabel>
+                  <Select
+                    value={region || null}
+                    onValueChange={(v) => setRegion((v ?? "") as Region | "")}
+                  >
+                    <SelectTrigger id="cust-region" className="w-full">
+                      <SelectValue placeholder={t("regionPlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {REGIONS.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {t(REGION_LABELS[item])}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field className="@2xl/card:col-span-2">
+                  <FieldLabel htmlFor="cust-source">{t("source")}</FieldLabel>
+                  <Select
+                    value={source || null}
+                    onValueChange={(v) => setSource((v ?? "") as Source | "")}
+                  >
+                    <SelectTrigger id="cust-source" className="w-full">
+                      <SelectValue placeholder={t("sourcePlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SOURCES.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {t(SOURCE_LABELS[item])}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field className="@2xl/card:col-span-2">
+                  <FieldLabel htmlFor="cust-address">{t("address")}</FieldLabel>
+                  <Textarea
+                    id="cust-address"
+                    placeholder={t("addressPlaceholder")}
+                    rows={3}
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </Field>
+              </div>
+              <Field>
+                <Button type="submit" className="w-full" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2Icon data-icon="inline-start" className="animate-spin" />
+                      {t("submitting")}
+                    </>
+                  ) : editingId ? (
+                    t("save")
+                  ) : (
+                    t("submit")
+                  )}
+                </Button>
+              </Field>
+            </FieldGroup>
+          </form>
+        </CardContent>
+      </Card>
     </PageContainer>
-  )
-}
-
-function ResultRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="font-medium break-all text-sm">{value}</dd>
-    </div>
   )
 }

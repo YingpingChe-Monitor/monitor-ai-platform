@@ -1,7 +1,9 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
-import { CustomersForm } from "@/components/customers-form"
+import customersData from "./data.json"
+import type { CustomerRecord } from "@/components/customers-data"
+import { CustomersList } from "@/components/customers-list"
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Customers")
@@ -10,6 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function CustomersPage() {
   const t = await getTranslations("Customers")
+  const customers = customersData as CustomerRecord[]
 
   return (
     <>
@@ -19,7 +22,7 @@ export default async function CustomersPage() {
           <p className="text-muted-foreground text-sm">{t("description")}</p>
         </div>
       </div>
-      <CustomersForm />
+      <CustomersList customers={customers} />
     </>
   )
 }
