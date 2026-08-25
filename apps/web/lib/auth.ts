@@ -66,6 +66,11 @@ export const MOCK_CUSTOMERS: Customer[] = [
   { id: "c1", name: "华信科技" },
   { id: "c2", name: "南方电力" },
   { id: "c3", name: "东湖智造" },
+  { id: "c4", name: "蓝海金融科技" },
+  { id: "c5", name: "中原重工" },
+  { id: "c6", name: "绿能新能源" },
+  { id: "c7", name: "恒基制造" },
+  { id: "c8", name: "云帆信息" },
 ]
 
 export const MOCK_PROJECTS: Project[] = [
